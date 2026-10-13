@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} - RK Hospital Bawaskar{% endblock %}
+
+{% block content %}
+<div style="max-width: 860px; margin: 0 auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+      <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--slate-900);">{{ title }}</h1>
+      <p style="color: var(--slate-500); font-size: 0.85rem;">RK Hospital Bawaskar Dental Patient Registration</p>
+    </div>
+    <a href="{% url 'patient_list' %}" class="btn btn-secondary btn-sm">← Back to Patients</a>
+  </div>
+
+  <div class="card">
+    <form method="POST">
+      {% csrf_token %}
+
+      <!-- Section: Demographics -->
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--slate-900); margin-bottom: 16px; border-bottom: 1px solid var(--slate-100); padding-bottom: 8px;">
+        1. Personal Demographics
+      </h3>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="form-group">
+          <label class="form-label">Medical Record Number (MRN) *</label>
+          {{ form.mrn }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number *</label>
+          {{ form.phone }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">First Name *</label>
+          {{ form.first_name }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name *</label>
+          {{ form.last_name }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date of Birth</label>
+          {{ form.date_of_birth }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Gender</label>
+          {{ form.gender }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Blood Group</label>
+          {{ form.blood_group }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          {{ form.email }}
+        </div>
+        <div class="form-group" style="grid-column: span 2;">
+          <label class="form-label">Residential Address</label>
+          {{ form.address }}
+        </div>
+      </div>
+
+      <!-- Section: Emergency Contact -->
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--slate-900); margin: 24px 0 16px; border-bottom: 1px solid var(--slate-100); padding-bottom: 8px;">
+        2. Emergency Contact
+      </h3>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="form-group">
+          <label class="form-label">Emergency Contact Person</label>
+          {{ form.emergency_contact_name }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Emergency Contact Phone</label>
+          {{ form.emergency_contact_phone }}
+        </div>
+      </div>
+
+      <!-- Section: Systemic Medical Alerts & Dental Safety -->
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: #be123c; margin: 24px 0 16px; border-bottom: 1px solid #fecdd3; padding-bottom: 8px;">
+        3. Medical Alerts & Dental Surgical Safety Checklist
+      </h3>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; background: #fff1f2; padding: 16px; border-radius: var(--radius-md); border: 1px solid #fecdd3;">
+        <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.85rem; color: #9f1239;">
+          {{ form.has_diabetes }} Diabetes Mellitus
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.85rem; color: #9f1239;">
+          {{ form.has_hypertension }} Hypertension (High BP)
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.85rem; color: #9f1239;">
+          {{ form.has_bleeding_disorder }} Bleeding Disorder
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.85rem; color: #9f1239;">
+          {{ form.has_cardiac_condition }} Cardiac Condition
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.85rem; color: #9f1239;">
+          {{ form.has_asthma }} Asthma / Respiratory
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.85rem; color: #9f1239;">
+          {{ form.is_pregnant }} Pregnancy
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.85rem; color: #9f1239; grid-column: span 3;">
+          {{ form.has_allergies }} Drug / Material Allergies (Penicillin, Latex, NSAIDs)
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Allergy Details (if any)</label>
+        {{ form.allergy_details }}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Current Medications (e.g. Aspirin, Blood thinners, Insulin)</label>
+        {{ form.current_medications }}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Additional Medical & Dental History Notes</label>
+        {{ form.medical_history_notes }}
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+        <a href="{% url 'patient_list' %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Save Patient Record</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

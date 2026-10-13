@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}Billing & Accounts - RK Hospital Bawaskar{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+  <div>
+    <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--slate-900);">Billing, Invoices & Collections</h1>
+    <p style="color: var(--slate-500); font-size: 0.9rem;">
+      Itemized dental treatment bills, receipts, and outstanding balance reconciliation
+    </p>
+  </div>
+</div>
+
+<!-- Revenue Metrics -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 24px;">
+  <div class="stat-card">
+    <div class="stat-icon" style="background: #dcfce7; color: #15803d;">
+      <svg style="width: 26px; height: 26px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+    </div>
+    <div>
+      <div class="stat-value">₹{{ total_revenue|floatformat:0 }}</div>
+      <div class="stat-label">Total Realized Revenue</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="background: #fee2e2; color: #b91c1c;">
+      <svg style="width: 26px; height: 26px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+    </div>
+    <div>
+      <div class="stat-value">₹{{ total_due|floatformat:0 }}</div>
+      <div class="stat-label">Outstanding Dues</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;">
+      <svg style="width: 26px; height: 26px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+    </div>
+    <div>
+      <div class="stat-value">{{ invoices.count }}</div>
+      <div class="stat-label">Total Invoices Issued</div>
+    </div>
+  </div>
+</div>
+
+<!-- Invoices Ledger -->
+<div class="card">
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Invoice #</th>
+          <th>Patient</th>
+          <th>Date</th>
+          <th>Billed (₹)</th>
+          <th>Discount</th>
+          <th>Net Amount</th>
+          <th>Paid Amount</th>
+          <th>Balance Due</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inv in invoices %}
+        <tr>
+          <td style="font-family: monospace; font-weight: 700; color: var(--primary-700);">{{ inv.invoice_number }}</td>
+          <td>
+            <a href="{% url 'patient_detail' inv.patient.id %}" style="font-weight: 700; color: var(--slate-900);">
+              {{ inv.patient.full_name }}
+            </a>
+            <div style="font-size: 0.72rem; color: var(--slate-400);">{{ inv.patient.mrn }}</div>
+          </td>
+          <td>{{ inv.invoice_date|date:"M d, Y" }}</td>
+          <td>₹{{ inv.total_amount }}</td>
+          <td>₹{{ inv.discount_amount }}</td>
+          <td style="font-weight: 800; color: var(--slate-900);">₹{{ inv.net_payable }}</td>
+          <td style="color: #15803d; font-weight: 700;">₹{{ inv.paid_amount }}</td>
+          <td style="color: #b91c1c; font-weight: 700;">₹{{ inv.balance_amount }}</td>
+          <td>
+            <span class="badge {% if inv.status == 'PAID' %}badge-success{% elif inv.status == 'PARTIAL' %}badge-warning{% else %}badge-danger{% endif %}">
+              {{ inv.get_status_display }}
+            </span>
+          </td>
+          <td>
+            <a href="{% url 'invoice_detail' inv.id %}" class="btn btn-secondary btn-sm" style="font-size: 0.75rem;">
+              Tax Invoice / Pay →
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="10" style="text-align: center; color: var(--slate-400); padding: 30px;">No invoices generated.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

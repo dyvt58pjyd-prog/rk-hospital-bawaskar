@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% block title %}Create Invoice - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 860px; margin: 0 auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+      <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--slate-900);">Generate Dental Hospital Invoice</h1>
+      <p style="color: var(--slate-500); font-size: 0.85rem;">
+        Patient: <b>{{ patient.full_name }}</b> ({{ patient.mrn }})
+      </p>
+    </div>
+    <a href="{% url 'patient_detail' patient.id %}?tab=billing" class="btn btn-secondary btn-sm">← Back to Patient</a>
+  </div>
+
+  <div class="card">
+    <form method="POST" id="invoiceForm">
+      {% csrf_token %}
+
+      <!-- Quick Add from Treatment Plan -->
+      {% if unbilled_treatments %}
+      <div style="background: var(--slate-50); border: 1px dashed var(--slate-300); padding: 14px; border-radius: var(--radius-md); margin-bottom: 20px;">
+        <div style="font-weight: 700; font-size: 0.85rem; color: var(--slate-800); margin-bottom: 8px;">
+          ⚡ Auto-Import from Patient's Treatment Plan:
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          {% for t in unbilled_treatments %}
+          <button type="button" class="btn btn-secondary btn-sm" onclick="addInvoiceItem('{{ t.procedure.name }} (#{{ t.tooth_number|default:"General" }})', 1, '{{ t.cost }}')">
+            + {{ t.procedure.name }} (Tooth {{ t.tooth_number|default:"General" }}) - ₹{{ t.cost }}
+          </button>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Itemized Lines Table -->
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--slate-900); margin-bottom: 12px;">
+        Invoice Line Items
+      </h3>
+
+      <div class="table-container" style="margin-bottom: 16px;">
+        <table class="data-table" id="itemsTable">
+          <thead>
+            <tr>
+              <th style="width: 50%;">Procedure / Service Description</th>
+              <th style="width: 15%;">Qty</th>
+              <th style="width: 25%;">Unit Price (₹)</th>
+              <th style="width: 10%;"></th>
+            </tr>
+          </thead>
+          <tbody id="itemsBody">
+            <!-- Row 1 Default -->
+            <tr>
+              <td>
+                <input type="text" name="item_desc[]" class="form-input" placeholder="e.g. Scaling & Polishing, Root Canal Treatment" required>
+              </td>
+              <td>
+                <input type="number" name="item_qty[]" class="form-input" value="1" min="1" required>
+              </td>
+              <td>
+                <input type="number" name="item_price[]" class="form-input" placeholder="0.00" step="0.01" required>
+              </td>
+              <td style="text-align: center;">
+                <button type="button" onclick="removeRow(this)" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer;">✕</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <button type="button" onclick="addNewBlankRow()" class="btn btn-secondary btn-sm" style="margin-bottom: 24px;">
+        + Add Another Item Line
+      </button>
+
+      <!-- Totals & Payments Section -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; border-top: 1px solid var(--slate-200); padding-top: 20px;">
+        <div>
+          <div class="form-group">
+            <label class="form-label">Discount Amount (₹)</label>
+            <input type="number" name="discount_amount" class="form-input" value="0.00" step="0.01">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Billing Notes</label>
+            <textarea name="notes" rows="2" class="form-textarea" placeholder="e.g. 50% advance collected. Balance on completion."></textarea>
+          </div>
+        </div>
+
+        <div style="background: var(--slate-50); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--slate-200);">
+          <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; color: var(--slate-800);">Record Immediate Payment (Optional)</h4>
+          <div class="form-group">
+            <label class="form-label">Payment Amount Collected Now (₹)</label>
+            <input type="number" name="initial_payment" class="form-input" value="0.00" step="0.01">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Payment Method</label>
+            <select name="payment_method" class="form-select">
+              <option value="UPI">UPI (Google Pay / PhonePe / Paytm)</option>
+              <option value="CASH">Cash</option>
+              <option value="CARD">Debit / Credit Card</option>
+              <option value="NETBANKING">Net Banking / NEFT</option>
+              <option value="INSURANCE">Dental Insurance / TPA</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Transaction Reference (UTR / Auth Code)</label>
+            <input type="text" name="transaction_ref" class="form-input" placeholder="e.g. UPI Ref #492819">
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+        <a href="{% url 'patient_detail' patient.id %}?tab=billing" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Create Invoice & Print</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function addNewBlankRow() {
+    const tbody = document.getElementById('itemsBody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" name="item_desc[]" class="form-input" placeholder="Procedure description" required></td>
+      <td><input type="number" name="item_qty[]" class="form-input" value="1" min="1" required></td>
+      <td><input type="number" name="item_price[]" class="form-input" placeholder="0.00" step="0.01" required></td>
+      <td style="text-align: center;"><button type="button" onclick="removeRow(this)" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer;">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  function addInvoiceItem(desc, qty, price) {
+    const tbody = document.getElementById('itemsBody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" name="item_desc[]" class="form-input" value="${desc}" required></td>
+      <td><input type="number" name="item_qty[]" class="form-input" value="${qty}" min="1" required></td>
+      <td><input type="number" name="item_price[]" class="form-input" value="${price}" step="0.01" required></td>
+      <td style="text-align: center;"><button type="button" onclick="removeRow(this)" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer;">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  function removeRow(btn) {
+    const tbody = document.getElementById('itemsBody');
+    if (tbody.children.length > 1) {
+      btn.closest('tr').remove();
+    }
+  }
+</script>
+{% endblock %}

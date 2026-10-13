@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block title %}Dental Store Inventory - RK Hospital Bawaskar{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+  <div>
+    <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--slate-900);">Dental Material & Store Inventory</h1>
+    <p style="color: var(--slate-500); font-size: 0.9rem;">
+      Track local anesthetics, rotary files, composite restorative materials, cements, and infection control sundries
+    </p>
+  </div>
+  <button onclick="document.getElementById('newMatModal').classList.add('active')" class="btn btn-primary btn-sm">
+    + Add Dental Material
+  </button>
+</div>
+
+<!-- Category Filters -->
+<div class="card" style="margin-bottom: 24px; padding: 14px 20px;">
+  <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+    <span style="font-size: 0.78rem; font-weight: 700; color: var(--slate-500); text-transform: uppercase;">Categories:</span>
+    <a href="{% url 'inventory_list' %}" class="badge {% if not selected_category %}badge-primary{% else %}badge-slate{% endif %}">All Materials</a>
+    {% for cat_val, cat_label in categories %}
+      <a href="?category={{ cat_val }}" class="badge {% if selected_category == cat_val %}badge-primary{% else %}badge-slate{% endif %}">
+        {{ cat_label }}
+      </a>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Inventory Table -->
+<div class="card">
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>SKU Code</th>
+          <th>Material Name</th>
+          <th>Category</th>
+          <th>Current Stock</th>
+          <th>Reorder Level</th>
+          <th>Unit Price (₹)</th>
+          <th>Supplier</th>
+          <th>Status</th>
+          <th>Stock Update</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td style="font-family: monospace; font-weight: 700;">{{ item.item_code }}</td>
+          <td>
+            <div style="font-weight: 700; color: var(--slate-900);">{{ item.name }}</div>
+          </td>
+          <td><span class="badge badge-slate">{{ item.get_category_display }}</span></td>
+          <td style="font-weight: 800; font-size: 0.95rem; {% if item.is_low_stock %}color: #e11d48;{% else %}color: #15803d;{% endif %}">
+            {{ item.current_stock }} {{ item.unit }}
+          </td>
+          <td>{{ item.reorder_threshold }}</td>
+          <td>₹{{ item.unit_cost }}</td>
+          <td style="font-size: 0.82rem;">{{ item.supplier_name|default:"--" }}</td>
+          <td>
+            {% if item.is_low_stock %}
+              <span class="badge badge-danger">Low Stock Alert</span>
+            {% else %}
+              <span class="badge badge-success">In Stock</span>
+            {% endif %}
+          </td>
+          <td>
+            <form method="POST" action="{% url 'inventory_stock_adjust' item.id %}" style="display: flex; gap: 4px; align-items: center;">
+              {% csrf_token %}
+              <input type="number" name="adjustment" value="5" style="width: 55px; padding: 4px 6px; border: 1px solid var(--slate-300); border-radius: 6px; font-size: 0.75rem;">
+              <button type="submit" class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 4px 8px;">+ Add</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="9" style="text-align: center; color: var(--slate-400); padding: 30px;">No inventory items recorded.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal: New Material -->
+<div id="newMatModal" class="modal-overlay">
+  <div class="modal-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--slate-900);">Add New Dental Material to Store</h3>
+      <button onclick="document.getElementById('newMatModal').classList.remove('active')" style="background:none; border:none; font-size:1.25rem; cursor:pointer;">✕</button>
+    </div>
+
+    <form method="POST" action="{% url 'inventory_create' %}">
+      {% csrf_token %}
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="form-group">
+          <label class="form-label">SKU / Item Code *</label>
+          {{ form.item_code }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category *</label>
+          {{ form.category }}
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Material Name & Brand *</label>
+        {{ form.name }}
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+        <div class="form-group">
+          <label class="form-label">Initial Stock *</label>
+          {{ form.current_stock }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Unit Packaging *</label>
+          {{ form.unit }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reorder Alert Level</label>
+          {{ form.reorder_threshold }}
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="form-group">
+          <label class="form-label">Unit Cost (₹)</label>
+          {{ form.unit_cost }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Supplier / Distributor</label>
+          {{ form.supplier_name }}
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button type="button" onclick="document.getElementById('newMatModal').classList.remove('active')" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Material</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

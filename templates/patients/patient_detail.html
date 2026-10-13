@@ -1,0 +1,908 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ patient.full_name }} ({{ patient.mrn }}) - Dental EMR 360°{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'odontogram_bundle/odontogram.bundle.css' %}">
+<style>
+  .emr-nav-tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 2px solid var(--slate-200);
+    margin-bottom: 24px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  .emr-tab-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--slate-600);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .emr-tab-link:hover {
+    color: var(--primary-600);
+    background: var(--slate-100);
+  }
+  .emr-tab-link.active {
+    color: var(--primary-600);
+    border-bottom-color: var(--primary-600);
+    background: #ffffff;
+    box-shadow: 0 -2px 6px rgba(0,0,0,0.02);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Patient Master Header & Medical Alerts Banner -->
+<div class="card" style="margin-bottom: 24px; padding: 24px;">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
+    <!-- Patient Demographics -->
+    <div style="display: flex; gap: 18px; align-items: center;">
+      <div style="width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, #0284c7, #0f172a); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; box-shadow: var(--shadow-md);">
+        {{ patient.first_name|make_list|first }}{{ patient.last_name|make_list|first }}
+      </div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--slate-900);">{{ patient.full_name }}</h1>
+          <span class="badge badge-primary" style="font-family: monospace; font-size: 0.8rem;">{{ patient.mrn }}</span>
+          <span class="badge badge-slate">{{ patient.get_gender_display }} • {{ patient.age|default:"N/A" }} Yrs</span>
+          <span class="badge" style="background: #f1f5f9; color: #334155;">Blood: <b>{{ patient.blood_group }}</b></span>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--slate-500); margin-top: 6px; display: flex; gap: 16px; flex-wrap: wrap;">
+          <span>📞 {{ patient.phone }}</span>
+          {% if patient.email %}<span>✉️ {{ patient.email }}</span>{% endif %}
+          {% if patient.address %}<span>📍 {{ patient.address|truncatechars:40 }}</span>{% endif %}
+          {% if patient.emergency_contact_phone %}<span>🚨 Emg: {{ patient.emergency_contact_name }} ({{ patient.emergency_contact_phone }})</span>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Financial Health & Actions -->
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <div style="text-align: right; padding-right: 16px; border-right: 1px solid var(--slate-200);">
+        <div style="font-size: 0.75rem; font-weight: 600; color: var(--slate-500); text-transform: uppercase;">Financial Due</div>
+        <div style="font-size: 1.25rem; font-weight: 800; color: {% if total_balance > 0 %}#b91c1c{% else %}#15803d{% endif %};">
+          ₹{{ total_balance|floatformat:2 }}
+        </div>
+        <div style="font-size: 0.72rem; color: var(--slate-400);">Paid: ₹{{ total_paid|floatformat:0 }} / ₹{{ total_billed|floatformat:0 }}</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <a href="{% url 'patient_edit' patient.id %}" class="btn btn-secondary btn-sm">Edit Profile</a>
+        <a href="{% url 'invoice_create' patient.id %}" class="btn btn-primary btn-sm">+ Create Bill</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- High-Alert Medical Warning Strip -->
+  {% if medical_alerts %}
+  <div style="margin-top: 20px; padding: 12px 16px; background: #fff1f2; border: 1.5px solid #fda4af; border-radius: var(--radius-md); display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+    <div style="display: flex; align-items: center; gap: 6px; color: #be123c; font-weight: 800; font-size: 0.85rem; text-transform: uppercase;">
+      <svg style="width: 18px; height: 18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      Critical Medical Alerts:
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+      {% for alert in medical_alerts %}
+        <span class="alert-tag">{{ alert }}</span>
+      {% endfor %}
+    </div>
+    {% if patient.current_medications %}
+    <div style="font-size: 0.8rem; color: #9f1239; margin-left: auto;">
+      <b>Current Meds:</b> {{ patient.current_medications }}
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- EMR Tabs Navigation -->
+<div class="emr-nav-tabs">
+  <a href="?tab=chart" class="emr-tab-link {% if active_tab == 'chart' %}active{% endif %}">
+    🦷 Dental Chart (Odontogram)
+  </a>
+  <a href="?tab=visits" class="emr-tab-link {% if active_tab == 'visits' %}active{% endif %}">
+    📋 Clinical Visits (SOAP Notes) <span class="badge badge-slate" style="font-size: 0.65rem;">{{ visits.count }}</span>
+  </a>
+  <a href="?tab=treatments" class="emr-tab-link {% if active_tab == 'treatments' %}active{% endif %}">
+    🛠️ Treatment Plan <span class="badge badge-slate" style="font-size: 0.65rem;">{{ treatments.count }}</span>
+  </a>
+  <a href="?tab=prescriptions" class="emr-tab-link {% if active_tab == 'prescriptions' %}active{% endif %}">
+    💊 Prescriptions (Rx) <span class="badge badge-slate" style="font-size: 0.65rem;">{{ prescriptions.count }}</span>
+  </a>
+  <a href="?tab=lab" class="emr-tab-link {% if active_tab == 'lab' %}active{% endif %}">
+    🔬 Dental Lab Orders <span class="badge badge-slate" style="font-size: 0.65rem;">{{ lab_orders.count }}</span>
+  </a>
+  <a href="?tab=radiographs" class="emr-tab-link {% if active_tab == 'radiographs' %}active{% endif %}">
+    🩻 Dental Radiographs & X-Rays <span class="badge badge-slate" style="font-size: 0.65rem;">{{ radiographs.count }}</span>
+  </a>
+  <a href="?tab=billing" class="emr-tab-link {% if active_tab == 'billing' %}active{% endif %}">
+    💰 Invoices & Billing <span class="badge badge-slate" style="font-size: 0.65rem;">{{ invoices.count }}</span>
+  </a>
+  <a href="?tab=appointments" class="emr-tab-link {% if active_tab == 'appointments' %}active{% endif %}">
+    📅 Appointments History <span class="badge badge-slate" style="font-size: 0.65rem;">{{ appointments.count }}</span>
+  </a>
+</div>
+
+<!-- TAB 1: INTERACTIVE ODONTOGRAM / TOOTH CHART -->
+{% if active_tab == 'chart' %}
+<div class="odontogram-wrapper" style="padding: 0; background: transparent; border: none; box-shadow: none;">
+  <!-- Studio Action Header -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; background: #ffffff; padding: 16px 20px; border-radius: var(--radius-md); border: 1px solid var(--slate-200); box-shadow: var(--shadow-sm); flex-wrap: wrap; gap: 12px;">
+    <div>
+      <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--slate-900); display: flex; align-items: center; gap: 8px;">
+        <span>Visual Dental Odontogram & Periodontal Charting</span>
+        <span style="font-size: 0.72rem; font-weight: 700; background: #e0f2fe; color: #0284c7; padding: 3px 8px; border-radius: 999px; border: 1px solid #bae6fd;">React-Advanced-Odontogram</span>
+      </h2>
+      <p style="font-size: 0.82rem; color: var(--slate-500); margin-top: 2px;">
+        High-precision anatomical dental charting: multi-surface caries (ICDAS 1-6), composite/amalgam fillings, endodontics, prosthetics, and periodontal probing depths.
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <a href="{% url 'odontogram_studio' patient.id %}" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);">
+        <span>⛶</span> Fullscreen Studio Mode
+      </a>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="var arch = document.getElementById('legacyArchContainer'); arch.style.display = arch.style.display === 'none' ? 'block' : 'none';">
+        Toggle Quick Grid
+      </button>
+    </div>
+  </div>
+
+  <!-- PRIMARY REACT ADVANCED ODONTOGRAM CONTAINER -->
+  <div style="margin-bottom: 24px; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm);">
+    <div
+      id="react-odontogram-root"
+      data-patient-id="{{ patient.id }}"
+      data-patient-name="{{ patient.full_name }}"
+      data-patient-mrn="{{ patient.mrn }}"
+      data-csrf-token="{{ csrf_token }}"
+      data-save-url="{% url 'api_odontogram_state' patient.id %}"
+      data-read-only="{% if request.user.is_patient_user %}true{% else %}false{% endif %}"
+      data-user-role="{{ request.user.role }}"
+    >
+      <div style="padding: 40px; text-align: center; color: var(--slate-500); background: #ffffff; border: 1px solid var(--slate-200); border-radius: var(--radius-md);">
+        <div style="font-size: 1.1rem; font-weight: 700; color: var(--slate-700); margin-bottom: 6px;">
+          Initializing React Advanced Odontogram...
+        </div>
+        <div style="font-size: 0.85rem;">Loading interactive SVG dental surfaces and clinical charting studio</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COLLAPSIBLE LEGACY ARCH CONTAINER -->
+  <div id="legacyArchContainer" style="display: none; background: #ffffff; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--slate-200); margin-top: 16px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--slate-800);">Quick Tabular Tooth Grid</h3>
+      <div style="display: flex; gap: 8px;">
+        <button id="viewAdultDentition" class="btn btn-primary btn-sm">Adult (32 Teeth)</button>
+        <button id="viewPediatricDentition" class="btn btn-secondary btn-sm">Pediatric (20 Teeth)</button>
+      </div>
+    </div>
+
+    <!-- Status Legend -->
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; padding: 12px 16px; background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-md); margin-bottom: 20px;">
+      <div class="legend-item"><span class="legend-dot" style="background: var(--tooth-healthy);"></span> Healthy / Sound</div>
+      <div class="legend-item"><span class="legend-dot" style="background: var(--tooth-caries);"></span> Caries / Decay</div>
+      <div class="legend-item"><span class="legend-dot" style="background: var(--tooth-filled);"></span> Composite / Amalgam Filled</div>
+      <div class="legend-item"><span class="legend-dot" style="background: var(--tooth-rct);"></span> Root Canal Treated (RCT)</div>
+      <div class="legend-item"><span class="legend-dot" style="background: var(--tooth-crown);"></span> Dental Crown / Cap</div>
+      <div class="legend-item"><span class="legend-dot" style="background: var(--tooth-implant);"></span> Dental Implant</div>
+      <div class="legend-item"><span class="legend-dot" style="background: var(--tooth-missing); border: 1px dashed #64748b;"></span> Missing / Extracted</div>
+      <div class="legend-item"><span class="legend-dot" style="background: var(--tooth-impacted);"></span> Impacted Wisdom</div>
+    </div>
+
+    <!-- ADULT DENTITION (32 TEETH FDI NOTATION) -->
+    <div id="adultDentitionArch">
+    <!-- MAXILLARY ARCH (UPPER JAW: Quadrant 1 & Quadrant 2) -->
+    <div style="text-align: center; font-size: 0.78rem; font-weight: 700; color: var(--slate-500); text-transform: uppercase; margin-bottom: 8px;">
+      Maxillary Arch (Upper Jaw)
+    </div>
+
+    <div class="dental-arch">
+      <!-- Q1: 18 down to 11 -->
+      {% for t_num in "18 17 16 15 14 13 12 11"|make_list|slice:":8" %}
+      {% endfor %}
+    <!-- Direct Clean Adult Render Arch -->
+    <div style="display: flex; justify-content: center; align-items: center; gap: 4px; margin-bottom: 12px; flex-wrap: nowrap; overflow-x: auto;">
+      <!-- Quadrant 1: 18 to 11 -->
+      <div style="display: flex; gap: 4px;">
+        {% for t in quadrant_1 %}
+          <div class="tooth-unit" data-tooth-number="{{ t.num }}" title="Tooth #{{ t.num }} ({{ t.status_display }})">
+            <div class="tooth-num">{{ t.num }}</div>
+            <div class="tooth-visual tooth-status-{{ t.status }}">
+              <div class="surface-grid">
+                <div class="surf-cell {% if t.buccal %}active-surface{% endif %}" title="Buccal"></div>
+                <div class="surf-cell {% if t.lingual %}active-surface{% endif %}" title="Lingual"></div>
+                <div class="surf-cell {% if t.mesial %}active-surface{% endif %}" title="Mesial"></div>
+                <div class="surf-cell {% if t.distal %}active-surface{% endif %}" title="Distal"></div>
+                <div class="surf-cell {% if t.occlusal %}active-surface{% endif %}" title="Occlusal"></div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- Midline Divider -->
+      <div class="quadrant-divider"></div>
+
+      <!-- Quadrant 2: 21 to 28 -->
+      <div style="display: flex; gap: 4px;">
+        {% for t in quadrant_2 %}
+          <div class="tooth-unit" data-tooth-number="{{ t.num }}" title="Tooth #{{ t.num }} ({{ t.status_display }})">
+            <div class="tooth-num">{{ t.num }}</div>
+            <div class="tooth-visual tooth-status-{{ t.status }}">
+              <div class="surface-grid">
+                <div class="surf-cell {% if t.buccal %}active-surface{% endif %}" title="Buccal"></div>
+                <div class="surf-cell {% if t.lingual %}active-surface{% endif %}" title="Lingual"></div>
+                <div class="surf-cell {% if t.mesial %}active-surface{% endif %}" title="Mesial"></div>
+                <div class="surf-cell {% if t.distal %}active-surface{% endif %}" title="Distal"></div>
+                <div class="surf-cell {% if t.occlusal %}active-surface{% endif %}" title="Occlusal"></div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Occlusal Midline Bar -->
+    <div class="midline-bar">
+      <span class="midline-label">Midline & Occlusal Plane</span>
+    </div>
+
+    <!-- MANDIBULAR ARCH (LOWER JAW: Quadrant 4 & Quadrant 3) -->
+    <div style="display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 12px; flex-wrap: nowrap; overflow-x: auto;">
+      <!-- Quadrant 4: 48 to 41 -->
+      <div style="display: flex; gap: 4px;">
+        {% for t in quadrant_4 %}
+          <div class="tooth-unit" data-tooth-number="{{ t.num }}" title="Tooth #{{ t.num }} ({{ t.status_display }})">
+            <div class="tooth-visual tooth-status-{{ t.status }}">
+              <div class="surface-grid">
+                <div class="surf-cell {% if t.buccal %}active-surface{% endif %}" title="Buccal"></div>
+                <div class="surf-cell {% if t.lingual %}active-surface{% endif %}" title="Lingual"></div>
+                <div class="surf-cell {% if t.mesial %}active-surface{% endif %}" title="Mesial"></div>
+                <div class="surf-cell {% if t.distal %}active-surface{% endif %}" title="Distal"></div>
+                <div class="surf-cell {% if t.occlusal %}active-surface{% endif %}" title="Occlusal"></div>
+              </div>
+            </div>
+            <div class="tooth-num" style="margin-top: 4px; margin-bottom: 0;">{{ t.num }}</div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="quadrant-divider"></div>
+
+      <!-- Quadrant 3: 31 to 38 -->
+      <div style="display: flex; gap: 4px;">
+        {% for t in quadrant_3 %}
+          <div class="tooth-unit" data-tooth-number="{{ t.num }}" title="Tooth #{{ t.num }} ({{ t.status_display }})">
+            <div class="tooth-visual tooth-status-{{ t.status }}">
+              <div class="surface-grid">
+                <div class="surf-cell {% if t.buccal %}active-surface{% endif %}" title="Buccal"></div>
+                <div class="surf-cell {% if t.lingual %}active-surface{% endif %}" title="Lingual"></div>
+                <div class="surf-cell {% if t.mesial %}active-surface{% endif %}" title="Mesial"></div>
+                <div class="surf-cell {% if t.distal %}active-surface{% endif %}" title="Distal"></div>
+                <div class="surf-cell {% if t.occlusal %}active-surface{% endif %}" title="Occlusal"></div>
+              </div>
+            </div>
+            <div class="tooth-num" style="margin-top: 4px; margin-bottom: 0;">{{ t.num }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div style="text-align: center; font-size: 0.78rem; font-weight: 700; color: var(--slate-500); text-transform: uppercase; margin-top: 8px;">
+      Mandibular Arch (Lower Jaw)
+    </div>
+  </div>
+
+  <!-- PEDIATRIC DENTITION (20 DECIDUOUS TEETH) -->
+  <div id="pediatricDentitionArch" style="display: none;">
+    <div style="text-align: center; font-size: 0.78rem; font-weight: 700; color: var(--slate-500); text-transform: uppercase; margin-bottom: 8px;">
+      Primary Deciduous Teeth (Upper)
+    </div>
+    <div style="display: flex; justify-content: center; align-items: center; gap: 4px; margin-bottom: 12px;">
+      <div style="display: flex; gap: 4px;">
+        {% for t in pedia_q5 %}
+          <div class="tooth-unit" data-tooth-number="{{ t.num }}">
+            <div class="tooth-num">{{ t.num }}</div>
+            <div class="tooth-visual tooth-status-{{ t.status }}"></div>
+          </div>
+        {% endfor %}
+      </div>
+      <div class="quadrant-divider"></div>
+      <div style="display: flex; gap: 4px;">
+        {% for t in pedia_q6 %}
+          <div class="tooth-unit" data-tooth-number="{{ t.num }}">
+            <div class="tooth-num">{{ t.num }}</div>
+            <div class="tooth-visual tooth-status-{{ t.status }}"></div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="midline-bar">
+      <span class="midline-label">Deciduous Occlusal Plane</span>
+    </div>
+
+    <div style="display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 12px;">
+      <div style="display: flex; gap: 4px;">
+        {% for t in pedia_q8 %}
+          <div class="tooth-unit" data-tooth-number="{{ t.num }}">
+            <div class="tooth-visual tooth-status-{{ t.status }}"></div>
+            <div class="tooth-num" style="margin-top: 4px;">{{ t.num }}</div>
+          </div>
+        {% endfor %}
+      </div>
+      <div class="quadrant-divider"></div>
+      <div style="display: flex; gap: 4px;">
+        {% for t in pedia_q7 %}
+          <div class="tooth-unit" data-tooth-number="{{ t.num }}">
+            <div class="tooth-visual tooth-status-{{ t.status }}"></div>
+            <div class="tooth-num" style="margin-top: 4px;">{{ t.num }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  </div> <!-- /legacyArchContainer -->
+</div>
+{% endif %}
+
+<!-- TAB 2: CLINICAL VISITS (SOAP NOTES) -->
+{% if active_tab == 'visits' %}
+<div class="card">
+  <div class="card-header">
+    <div>
+      <div class="card-title">Clinical Visits & SOAP Progress Notes</div>
+      <div style="font-size: 0.82rem; color: var(--slate-500);">Complete chronological medical history, diagnosis, and surgical notes</div>
+    </div>
+    <a href="{% url 'clinical_visit_create' patient.id %}" class="btn btn-primary btn-sm">+ Record Clinical Visit</a>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    {% for visit in visits %}
+    <div style="border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 20px; background: #ffffff;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--slate-100); padding-bottom: 12px; margin-bottom: 14px;">
+        <div>
+          <span style="font-weight: 800; font-size: 1.05rem; color: var(--slate-900);">
+            Visit on {{ visit.visit_date|date:"F d, Y" }}
+          </span>
+          <span style="font-size: 0.82rem; color: var(--slate-500); margin-left: 10px;">
+            Examined by Dr. {{ visit.dentist.get_full_name }} ({{ visit.dentist.specialization|default:"Dentist" }})
+          </span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          {% if visit.blood_pressure %}<span class="badge badge-slate">BP: {{ visit.blood_pressure }}</span>{% endif %}
+          {% if visit.pulse_rate %}<span class="badge badge-slate">Pulse: {{ visit.pulse_rate }} bpm</span>{% endif %}
+          {% if visit.blood_sugar %}<span class="badge badge-slate">Sugar: {{ visit.blood_sugar }}</span>{% endif %}
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 0.88rem;">
+        <div>
+          <b style="color: var(--slate-800);">Chief Complaint:</b>
+          <p style="color: var(--slate-600); margin-top: 2px;">{{ visit.chief_complaint }}</p>
+        </div>
+        <div>
+          <b style="color: var(--slate-800);">Clinical Assessment (Diagnosis):</b>
+          <p style="color: #0369a1; font-weight: 600; margin-top: 2px;">{{ visit.assessment }}</p>
+        </div>
+        <div>
+          <b style="color: var(--slate-800);">Objective / Intra-Oral Exam:</b>
+          <p style="color: var(--slate-600); margin-top: 2px;">{{ visit.objective|default:"Within normal limits" }}</p>
+        </div>
+        <div>
+          <b style="color: var(--slate-800);">Clinical Action Plan:</b>
+          <p style="color: var(--slate-600); margin-top: 2px; white-space: pre-line;">{{ visit.treatment_plan }}</p>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div style="text-align: center; color: var(--slate-400); padding: 40px;">No clinical visit notes recorded yet.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- TAB 3: TREATMENT PLAN -->
+{% if active_tab == 'treatments' %}
+<div class="card">
+  <div class="card-header">
+    <div>
+      <div class="card-title">Treatment Plan & Dental Procedures</div>
+      <div style="font-size: 0.82rem; color: var(--slate-500);">Planned, in-progress, and completed dental operations</div>
+    </div>
+    <a href="{% url 'treatment_create' patient.id %}" class="btn btn-primary btn-sm">+ Add Procedure</a>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Procedure</th>
+          <th>Tooth / Area</th>
+          <th>Dentist</th>
+          <th>Planned Date</th>
+          <th>Fee (₹)</th>
+          <th>Discount</th>
+          <th>Net Cost</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in treatments %}
+        <tr>
+          <td>
+            <div style="font-weight: 700; color: var(--slate-900);">{{ item.procedure.name }}</div>
+            <div style="font-size: 0.72rem; color: var(--slate-400);">{{ item.procedure.get_category_display }}</div>
+          </td>
+          <td style="font-weight: 700;">{{ item.tooth_number|default:"General" }}</td>
+          <td style="font-size: 0.82rem;">Dr. {{ item.dentist.last_name }}</td>
+          <td>{{ item.planned_date|date:"M d, Y" }}</td>
+          <td>₹{{ item.cost }}</td>
+          <td>₹{{ item.discount }}</td>
+          <td style="font-weight: 800; color: #0284c7;">₹{{ item.net_cost }}</td>
+          <td>
+            {% if item.status == 'COMPLETED' %}
+              <span class="badge badge-success">Completed</span>
+            {% elif item.status == 'IN_PROGRESS' %}
+              <span class="badge badge-warning">In Progress</span>
+            {% else %}
+              <span class="badge badge-slate">Planned</span>
+            {% endif %}
+          </td>
+          <td>
+            <form method="POST" action="{% url 'treatment_update_status' item.id %}" style="display: inline-block;">
+              {% csrf_token %}
+              {% if item.status == 'PLANNED' %}
+                <input type="hidden" name="status" value="IN_PROGRESS">
+                <button type="submit" class="btn btn-secondary btn-sm" style="font-size: 0.72rem;">Start</button>
+              {% elif item.status == 'IN_PROGRESS' %}
+                <input type="hidden" name="status" value="COMPLETED">
+                <button type="submit" class="btn btn-success btn-sm" style="font-size: 0.72rem;">Complete</button>
+              {% endif %}
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="9" style="text-align: center; color: var(--slate-400); padding: 24px;">No procedures in treatment plan.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- TAB 4: PRESCRIPTIONS (Rx) -->
+{% if active_tab == 'prescriptions' %}
+<div class="card">
+  <div class="card-header">
+    <div>
+      <div class="card-title">Digital Dental Prescriptions</div>
+      <div style="font-size: 0.82rem; color: var(--slate-500);">Doctor's written dental medications, analgesics, and mouthwashes</div>
+    </div>
+    <a href="{% url 'prescription_create' patient.id %}" class="btn btn-primary btn-sm">+ Issue Prescription (Rx)</a>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 16px;">
+    {% for rx in prescriptions %}
+    <div style="border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 18px; background: #ffffff;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--slate-100); padding-bottom: 8px;">
+        <div>
+          <span style="font-weight: 700; color: var(--slate-900);">Prescription #{{ rx.id }}</span>
+          <span style="font-size: 0.8rem; color: var(--slate-500); margin-left: 10px;">Date: {{ rx.prescription_date|date:"M d, Y" }}</span>
+          <span style="font-size: 0.8rem; color: var(--slate-500); margin-left: 10px;">By Dr. {{ rx.dentist.get_full_name }}</span>
+        </div>
+        <a href="{% url 'prescription_print' rx.id %}" target="_blank" class="btn btn-secondary btn-sm" style="font-size: 0.78rem;">
+          🖨️ Print Prescription Pad
+        </a>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        {% for item in rx.items.all %}
+        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; padding: 6px 10px; background: var(--slate-50); border-radius: 6px;">
+          <div>
+            <b>{{ item.medicine_name }}</b> ({{ item.dosage }})
+            <span style="font-size: 0.78rem; color: var(--slate-500); margin-left: 8px;">• {{ item.instructions }}</span>
+          </div>
+          <div style="font-weight: 600; color: var(--primary-700);">
+            {{ item.frequency }} x {{ item.duration }}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% if rx.general_advice %}
+      <div style="margin-top: 10px; font-size: 0.8rem; color: var(--slate-600);">
+        <b>Special Advice:</b> {{ rx.general_advice }}
+      </div>
+      {% endif %}
+    </div>
+    {% empty %}
+    <div style="text-align: center; color: var(--slate-400); padding: 30px;">No prescriptions on file.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- TAB 5: DENTAL LAB ORDERS -->
+{% if active_tab == 'lab' %}
+<div class="card">
+  <div class="card-header">
+    <div>
+      <div class="card-title">Prosthodontic & Orthodontic Lab Tracking</div>
+      <div style="font-size: 0.82rem; color: var(--slate-500);">Crowns, bridges, aligners, and denture fabrications</div>
+    </div>
+    <a href="{% url 'lab_list' %}" class="btn btn-primary btn-sm">+ New Lab Order</a>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Order #</th>
+          <th>Work Description</th>
+          <th>Teeth</th>
+          <th>Shade</th>
+          <th>Lab Partner</th>
+          <th>Sent Date</th>
+          <th>Est. Delivery</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in lab_orders %}
+        <tr>
+          <td style="font-family: monospace; font-weight: 700;">{{ order.order_number }}</td>
+          <td style="font-weight: 700;">{{ order.get_work_type_display }}</td>
+          <td style="font-weight: 700;">{{ order.teeth_numbers }}</td>
+          <td><b>{{ order.shade }}</b></td>
+          <td>{{ order.lab_name }}</td>
+          <td>{{ order.sent_date|date:"M d" }}</td>
+          <td>{{ order.expected_delivery|date:"M d, Y" }}</td>
+          <td><span class="badge badge-warning">{{ order.get_status_display }}</span></td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" style="text-align: center; color: var(--slate-400); padding: 24px;">No lab orders for this patient.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- TAB 6: DENTAL RADIOGRAPHS & X-RAYS -->
+{% if active_tab == 'radiographs' %}
+<div class="card">
+  <div class="card-header">
+    <div>
+      <div class="card-title">Digital Dental Radiographs (X-Ray Vault)</div>
+      <div style="font-size: 0.82rem; color: var(--slate-500);">IOPA periapical, OPG panoramic, and bitewing imaging</div>
+    </div>
+    <button onclick="document.getElementById('uploadXrayModal').classList.add('active')" class="btn btn-primary btn-sm">
+      + Upload Dental X-Ray
+    </button>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px;">
+    {% for rad in radiographs %}
+    <div style="border: 1px solid var(--slate-200); border-radius: var(--radius-md); overflow: hidden; background: #ffffff;">
+      <div style="height: 190px; background: #0f172a; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+        {% if rad.image_file %}
+          <img src="{{ rad.image_file.url }}" alt="{{ rad.get_image_type_display }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+        {% else %}
+          <div style="color: #94a3b8; font-size: 0.85rem;">[Digital Radiograph Scan]</div>
+        {% endif %}
+      </div>
+      <div style="padding: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-weight: 700; font-size: 0.9rem; color: var(--slate-900);">{{ rad.get_image_type_display }}</span>
+          <span class="badge badge-primary">Tooth: {{ rad.tooth_number|default:"Full" }}</span>
+        </div>
+        <div style="font-size: 0.78rem; color: var(--slate-500); margin-top: 4px;">
+          Captured {{ rad.captured_date|date:"M d, Y" }} by Dr. {{ rad.dentist.last_name }}
+        </div>
+        {% if rad.findings %}
+        <div style="margin-top: 8px; font-size: 0.8rem; color: var(--slate-700); background: var(--slate-50); padding: 6px 10px; border-radius: 6px;">
+          <b>Findings:</b> {{ rad.findings }}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div style="grid-column: 1 / -1; text-align: center; color: var(--slate-400); padding: 40px;">
+      No dental radiographs uploaded yet. Click "+ Upload Dental X-Ray" to attach IOPA or OPG files.
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- TAB 7: BILLING & INVOICES -->
+{% if active_tab == 'billing' %}
+<div class="card">
+  <div class="card-header">
+    <div>
+      <div class="card-title">Patient Invoices, Receipts & Payments</div>
+      <div style="font-size: 0.82rem; color: var(--slate-500);">Itemized procedure bills and payment records</div>
+    </div>
+    <a href="{% url 'invoice_create' patient.id %}" class="btn btn-primary btn-sm">+ Generate New Invoice</a>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Invoice #</th>
+          <th>Date</th>
+          <th>Total Billed</th>
+          <th>Discount</th>
+          <th>Net Payable</th>
+          <th>Paid Amount</th>
+          <th>Balance Due</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inv in invoices %}
+        <tr>
+          <td style="font-family: monospace; font-weight: 700;">{{ inv.invoice_number }}</td>
+          <td>{{ inv.invoice_date|date:"M d, Y" }}</td>
+          <td>₹{{ inv.total_amount }}</td>
+          <td>₹{{ inv.discount_amount }}</td>
+          <td style="font-weight: 800; color: var(--slate-900);">₹{{ inv.net_payable }}</td>
+          <td style="color: #15803d; font-weight: 700;">₹{{ inv.paid_amount }}</td>
+          <td style="color: #b91c1c; font-weight: 700;">₹{{ inv.balance_amount }}</td>
+          <td>
+            <span class="badge {% if inv.status == 'PAID' %}badge-success{% elif inv.status == 'PARTIAL' %}badge-warning{% else %}badge-danger{% endif %}">
+              {{ inv.get_status_display }}
+            </span>
+          </td>
+          <td>
+            <div style="display: flex; gap: 6px;">
+              <a href="{% url 'invoice_detail' inv.id %}" class="btn btn-secondary btn-sm" style="font-size: 0.75rem;">
+                Tax Invoice
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="9" style="text-align: center; color: var(--slate-400); padding: 24px;">No invoices generated for this patient yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- TAB 8: APPOINTMENTS -->
+{% if active_tab == 'appointments' %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Appointment History & Upcoming Sittings</div>
+  </div>
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Dentist</th>
+          <th>Chair</th>
+          <th>Reason</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for appt in appointments %}
+        <tr>
+          <td style="font-weight: 700;">{{ appt.appointment_date|date:"M d, Y" }}</td>
+          <td>{{ appt.start_time|time:"H:i" }}</td>
+          <td>Dr. {{ appt.dentist.get_full_name }}</td>
+          <td>{{ appt.chair.name|default:"Unassigned" }}</td>
+          <td>{{ appt.reason }}</td>
+          <td><span class="badge badge-primary">{{ appt.get_status_display }}</span></td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" style="text-align: center; color: var(--slate-400); padding: 24px;">No appointments on record.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+
+<!-- ========================================================
+     MODAL: INTERACTIVE TOOTH CLINICAL DIAGNOSIS & PROCEDURE
+     ======================================================== -->
+<div id="toothModal" class="modal-overlay" data-patient-id="{{ patient.id }}">
+  <div class="modal-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h3 id="modalToothTitle" style="font-size: 1.15rem; font-weight: 800; color: var(--slate-900);">
+        Tooth Clinical Examination & Charting
+      </h3>
+      <button id="modalCloseBtn" style="background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--slate-400); font-weight: bold;">✕</button>
+    </div>
+
+    <!-- Condition Selector -->
+    <div class="form-group">
+      <label class="form-label">Tooth Status / Diagnosis</label>
+      <select id="modalToothStatus" class="form-select">
+        <option value="HEALTHY">Healthy / Sound Structure</option>
+        <option value="CARIES">Dental Caries / Decay</option>
+        <option value="FILLED">Composite / Amalgam Filled</option>
+        <option value="RCT">Root Canal Treated (RCT)</option>
+        <option value="CROWN">Dental Crown / Cap</option>
+        <option value="IMPLANT">Dental Implant</option>
+        <option value="MISSING">Missing / Extracted</option>
+        <option value="IMPACTED">Impacted Wisdom Tooth</option>
+        <option value="FRACTURED">Fractured / Chipped</option>
+        <option value="VENEER">Aesthetic Veneer</option>
+        <option value="BRIDGE">Bridge Pontic / Abutment</option>
+      </select>
+    </div>
+
+    <!-- Surface Checkboxes (5 surfaces) -->
+    <div class="form-group">
+      <label class="form-label">Affected Tooth Surfaces (for Restorations / Cavities)</label>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; padding: 10px 14px; background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-md);">
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600;">
+          <input type="checkbox" id="surfMesial"> Mesial (M)
+        </label>
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600;">
+          <input type="checkbox" id="surfOcclusal"> Occlusal / Incisal (O/I)
+        </label>
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600;">
+          <input type="checkbox" id="surfDistal"> Distal (D)
+        </label>
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600;">
+          <input type="checkbox" id="surfBuccal"> Buccal / Facial (B)
+        </label>
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600;">
+          <input type="checkbox" id="surfLingual"> Lingual / Palatal (L)
+        </label>
+      </div>
+    </div>
+
+    <!-- Periodontal Evaluation -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;" class="form-group">
+      <div>
+        <label class="form-label">Pocket Depth (mm)</label>
+        <input type="number" id="modalPocketDepth" min="1" max="12" class="form-input" value="2">
+      </div>
+      <div>
+        <label class="form-label">Tooth Mobility</label>
+        <select id="modalMobility" class="form-select">
+          <option value="0">Grade 0 (Normal)</option>
+          <option value="1">Grade I (Slight)</option>
+          <option value="2">Grade II (Moderate)</option>
+          <option value="3">Grade III (Severe)</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Gingival Bleeding</label>
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; margin-top: 10px;">
+          <input type="checkbox" id="modalBop"> Bleeding on Probe
+        </label>
+      </div>
+    </div>
+
+    <!-- Clinical Chairside Notes -->
+    <div class="form-group">
+      <label class="form-label">Clinical Observations & Findings</label>
+      <textarea id="modalNotes" rows="2" class="form-textarea" placeholder="e.g. Tenderness to percussion (+), deep dentinal decay"></textarea>
+    </div>
+
+    <!-- Add directly to Treatment Plan -->
+    <div class="form-group" style="padding-top: 10px; border-top: 1px dashed var(--slate-200);">
+      <label class="form-label">Add Procedure to Treatment Plan (Optional)</label>
+      <select id="modalProcedureSelect" class="form-select">
+        <option value="">-- No Procedure (Just Update Chart) --</option>
+        {% for proc in procedures %}
+          <option value="{{ proc.id }}">{{ proc.name }} (₹{{ proc.standard_fee }})</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Action Buttons -->
+    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+      <button type="button" onclick="document.getElementById('toothModal').classList.remove('active')" class="btn btn-secondary">
+        Cancel
+      </button>
+      <button type="button" id="modalSaveToothBtn" class="btn btn-primary">
+        Save Changes
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     MODAL: UPLOAD DENTAL RADIOGRAPH (X-RAY)
+     ======================================================== -->
+<div id="uploadXrayModal" class="modal-overlay">
+  <div class="modal-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--slate-900);">
+        Upload Dental Radiograph / X-Ray
+      </h3>
+      <button onclick="document.getElementById('uploadXrayModal').classList.remove('active')" style="background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--slate-400); font-weight: bold;">✕</button>
+    </div>
+
+    <form method="POST" action="{% url 'radiograph_upload' patient.id %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Radiograph Image Type</label>
+        <select name="image_type" class="form-select">
+          <option value="IOPA">IOPA (Intraoral Periapical X-Ray)</option>
+          <option value="OPG">Full Mouth Digital OPG (Panoramic)</option>
+          <option value="BITEWING">Bitewing Radiograph</option>
+          <option value="CBCT">CBCT 3D Scan</option>
+          <option value="INTRAORAL_PHOTO">Intraoral Camera Photo</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Tooth Number / Region</label>
+        <input type="text" name="tooth_number" class="form-input" placeholder="e.g. 26, or Maxillary Anterior">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">X-Ray Image File</label>
+        <input type="file" name="image_file" class="form-input" accept="image/*" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Radiographic Findings / Notes</label>
+        <textarea name="findings" rows="2" class="form-textarea" placeholder="e.g. Radiolucency at apex of mesiobuccal root, intact lamina dura"></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button type="button" onclick="document.getElementById('uploadXrayModal').classList.remove('active')" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary">Upload & Attach to EMR</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'odontogram_bundle/odontogram.bundle.js' %}"></script>
+<script src="{% static 'js/odontogram.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var rootEl = document.getElementById('react-odontogram-root');
+    if (rootEl && window.mountAdvancedOdontogram) {
+      window.mountAdvancedOdontogram(rootEl, {
+        patientId: {{ patient.id }},
+        patientName: "{{ patient.full_name|escapejs }}",
+        patientMrn: "{{ patient.mrn|escapejs }}",
+        csrfToken: "{{ csrf_token }}",
+        saveUrl: "{% url 'api_odontogram_state' patient.id %}",
+        readOnly: {% if request.user.is_patient_user %}true{% else %}false{% endif %},
+        userRole: "{{ request.user.role }}",
+        onSaveSuccess: function(data) {
+          console.log('[RK Odontogram] Saved successfully:', data);
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

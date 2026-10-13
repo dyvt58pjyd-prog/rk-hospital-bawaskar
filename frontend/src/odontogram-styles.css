@@ -1,0 +1,270 @@
+/* RK Hospital Bawaskar - Advanced Odontogram Studio Styles */
+.rk-odontogram-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+  border: 1px solid #e2e8f0;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.rk-studio-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 20px;
+  background: #0f172a;
+  color: #f8fafc;
+  border-bottom: 2px solid #0284c7;
+}
+
+.rk-studio-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.rk-hospital-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  color: #38bdf8;
+}
+
+.rk-badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #0ea5e9;
+  box-shadow: 0 0 10px #38bdf8;
+  animation: rk-pulse 2s infinite;
+}
+
+.rk-badge-sep {
+  opacity: 0.4;
+}
+
+.rk-patient-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: #f1f5f9;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.rk-patient-name {
+  font-weight: 700;
+}
+
+.rk-patient-mrn {
+  color: #94a3b8;
+  font-size: 0.75rem;
+}
+
+.rk-readonly-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+.rk-studio-center {
+  display: flex;
+  align-items: center;
+}
+
+.rk-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.rk-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.rk-status-saved .rk-status-dot {
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.rk-status-saved .rk-status-text {
+  color: #34d399;
+}
+
+.rk-status-dirty .rk-status-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 6px #f59e0b;
+}
+
+.rk-status-dirty .rk-status-text {
+  color: #fbbf24;
+}
+
+.rk-status-saving .rk-status-dot {
+  background: #38bdf8;
+  animation: rk-pulse 0.8s infinite;
+}
+
+.rk-status-saving .rk-status-text {
+  color: #7dd3fc;
+}
+
+.rk-status-error .rk-status-dot {
+  background: #ef4444;
+}
+
+.rk-status-error .rk-status-text {
+  color: #f87171;
+}
+
+.rk-studio-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rk-btn-group {
+  display: flex;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.rk-btn-xs {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  border: none;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.rk-btn-xs:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.rk-btn-xs.active {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.rk-select-compact {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.rk-select-compact option {
+  background: #1e293b;
+  color: #ffffff;
+}
+
+.rk-export-group {
+  display: flex;
+  gap: 4px;
+}
+
+.rk-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 6px 12px;
+}
+
+.rk-btn-outline {
+  background: transparent;
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.rk-btn-outline:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.rk-btn-save {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border: 1px solid #38bdf8;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+}
+
+.rk-btn-save:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+  transform: translateY(-1px);
+}
+
+.rk-btn-pulse {
+  animation: rk-glow 1.8s infinite;
+}
+
+.rk-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: rk-spin 0.8s linear infinite;
+}
+
+@keyframes rk-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes rk-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.9); }
+}
+
+@keyframes rk-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(2, 132, 199, 0.7); }
+  50% { box-shadow: 0 0 12px 3px rgba(2, 132, 199, 0.9); }
+}
+
+.rk-odontogram-shell-wrapper {
+  min-height: 680px;
+  background: #f8fafc;
+}
+
+/* Adjust odontogram-root height & scrolling inside Django template */
+.rk-odontogram-shell-wrapper .odontogram-root {
+  min-height: 680px;
+}

@@ -1,0 +1,139 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>{% block title %}RK Hospital Bawaskar{% endblock %} | Advanced Dental EMR</title>
+  <link rel="stylesheet" href="{% static 'css/hospital_theme.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<div class="app-layout">
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #0ea5e9, #0284c7); border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);">
+          <!-- Dental Tooth SVG Icon -->
+          <svg style="width: 24px; height: 24px; fill: none; stroke: #ffffff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;" viewBox="0 0 24 24">
+            <path d="M12 2C8.5 2 6 4.5 6 8c0 3.5 1.5 6.5 2 10 .5 3 2 4 4 4s3.5-1 4-4c.5-3.5 2-6.5 2-10 0-3.5-2.5-6-6-6z"/>
+            <path d="M10 8c.5 1 1.5 1.5 2 1.5s1.5-.5 2-1.5"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-font" style="font-weight: 800; font-size: 1.05rem; color: #ffffff; line-height: 1.15;">RK HOSPITAL</div>
+          <div style="font-size: 0.72rem; color: var(--primary-200); font-weight: 600; letter-spacing: 0.04em;">BAWASKAR DENTAL EMR</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="nav-section-title">Clinical Workspace</div>
+      <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        <span>Dashboard</span>
+      </a>
+
+      {% if not user.is_patient_user %}
+      <a href="{% url 'patient_list' %}" class="nav-link {% if 'patient' in request.path and not 'new' in request.path %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        <span>Patients (EMR 360°)</span>
+      </a>
+
+      <a href="{% url 'appointment_list' %}" class="nav-link {% if 'appointment' in request.path %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        <span>Chairs & Schedule</span>
+      </a>
+
+      <div class="nav-section-title">Dental Hospital Ops</div>
+      <a href="{% url 'lab_list' %}" class="nav-link {% if 'lab' in request.path %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v6a6 6 0 0 0 12 0V2"></path><line x1="6" y1="2" x2="18" y2="2"></line><line x1="12" y1="14" x2="12" y2="22"></line><line x1="8" y1="22" x2="16" y2="22"></line></svg>
+        <span>Dental Lab Orders</span>
+      </a>
+
+      <a href="{% url 'billing_list' %}" class="nav-link {% if 'billing' in request.path %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+        <span>Billing & Invoicing</span>
+      </a>
+
+      <a href="{% url 'inventory_list' %}" class="nav-link {% if 'inventory' in request.path %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+        <span>Material Inventory</span>
+      </a>
+      {% endif %}
+    </div>
+
+    <!-- User Profile Bar in Sidebar -->
+    <div style="padding: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); background: rgba(0, 0, 0, 0.2); display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 0.85rem; flex-shrink: 0;">
+          {{ user.first_name|default:user.username|make_list|first|upper }}
+        </div>
+        <div style="overflow: hidden;">
+          <div style="font-size: 0.85rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            {{ user.get_full_name|default:user.username }}
+          </div>
+          <div style="font-size: 0.72rem; color: #38bdf8; font-weight: 500;">
+            {{ user.get_role_display }}
+          </div>
+        </div>
+      </div>
+      <a href="{% url 'logout' %}" title="Logout" style="color: var(--slate-400); padding: 6px; border-radius: 6px;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--slate-400)'">
+        <svg style="width: 18px; height: 18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <header class="top-nav">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <span style="font-size: 0.85rem; color: var(--slate-500); font-weight: 600;">
+          🏥 RK Hospital Bawaskar • Centre of Dental Excellence & Maxillofacial Surgery
+        </span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <!-- Role badge -->
+        <span class="badge" style="background: #e0f2fe; color: #0284c7; padding: 6px 14px; font-size: 0.8rem; font-weight: 700;">
+          Active Role: {{ user.get_role_display }}
+        </span>
+
+        {% if not user.is_patient_user %}
+        <a href="{% url 'patient_create' %}" class="btn btn-primary btn-sm">
+          <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          New Patient
+        </a>
+        {% endif %}
+      </div>
+    </header>
+
+    <!-- Global Messages Alert Container -->
+    {% if messages %}
+    <div style="padding: 16px 28px 0;">
+      {% for message in messages %}
+      <div style="padding: 12px 18px; border-radius: 10px; margin-bottom: 12px; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; justify-content: space-between;
+        {% if message.tags == 'success' %}background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46;
+        {% elif message.tags == 'error' %}background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;
+        {% else %}background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af;{% endif %}">
+        <div>{{ message }}</div>
+        <button onclick="this.parentElement.remove()" style="background:none; border:none; cursor:pointer; font-weight:bold; color:inherit;">✕</button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Page Body -->
+    <main style="padding: 28px; flex: 1;">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

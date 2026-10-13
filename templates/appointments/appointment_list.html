@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% block title %}Chairs & Appointments - RK Hospital Bawaskar{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+  <div>
+    <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--slate-900);">Operatory Chairs & Appointments</h1>
+    <p style="color: var(--slate-500); font-size: 0.9rem;">
+      Live chair schedules, procedure slots, and dentist operatory queue
+    </p>
+  </div>
+  <div style="display: flex; gap: 10px;">
+    <button onclick="document.getElementById('newApptModal').classList.add('active')" class="btn btn-primary btn-sm">
+      + Book Appointment
+    </button>
+  </div>
+</div>
+
+<!-- Date Picker Bar -->
+<div class="card" style="margin-bottom: 24px; padding: 14px 20px;">
+  <form method="GET" style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+    <label style="font-weight: 700; font-size: 0.85rem; color: var(--slate-700);">Select Date:</label>
+    <input type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}" class="form-input" style="width: auto;" onchange="this.form.submit()">
+    <a href="?date={% now 'Y-m-d' %}" class="btn btn-secondary btn-sm">Today</a>
+    <span style="font-size: 0.85rem; color: var(--slate-500); margin-left: auto;">
+      Showing appointments for: <b>{{ selected_date|date:"l, F d, Y" }}</b>
+    </span>
+  </form>
+</div>
+
+<!-- Operatory Chairs Multi-Column Day Schedule -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 28px;">
+  {% for col in chair_schedule %}
+  <div class="card" style="padding: 16px; display: flex; flex-direction: column;">
+    <div style="border-bottom: 2px solid var(--slate-100); padding-bottom: 12px; margin-bottom: 14px;">
+      <div style="font-weight: 800; font-size: 1rem; color: var(--slate-900);">{{ col.operatory.name }}</div>
+      <div style="font-size: 0.75rem; color: var(--slate-500); margin-top: 2px;">{{ col.operatory.specialty_focus }}</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px; flex: 1;">
+      {% for appt in col.appointments %}
+      <div style="border: 1px solid var(--slate-200); border-radius: var(--radius-sm); padding: 12px; background: {% if appt.status == 'IN_CHAIR' %}#f0fdf4; border-color: #86efac;{% elif appt.status == 'CHECKED_IN' %}#fffbeb; border-color: #fde68a;{% else %}#ffffff;{% endif %}">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <span style="font-weight: 800; font-size: 0.85rem; color: var(--slate-900);">
+            {{ appt.start_time|time:"H:i" }}
+          </span>
+          <span class="badge {% if appt.status == 'IN_CHAIR' %}badge-success{% elif appt.status == 'CHECKED_IN' %}badge-warning{% elif appt.status == 'COMPLETED' %}badge-purple{% else %}badge-slate{% endif %}" style="font-size: 0.68rem;">
+            {{ appt.get_status_display }}
+          </span>
+        </div>
+
+        <div style="margin-top: 6px; font-weight: 700; font-size: 0.9rem;">
+          <a href="{% url 'patient_detail' appt.patient.id %}" style="color: var(--primary-700);">
+            {{ appt.patient.full_name }}
+          </a>
+        </div>
+        <div style="font-size: 0.78rem; color: var(--slate-500); margin-top: 2px;">
+          Dr. {{ appt.dentist.get_full_name }}
+        </div>
+        <div style="font-size: 0.75rem; color: var(--slate-600); margin-top: 4px; background: rgba(0,0,0,0.02); padding: 4px 6px; border-radius: 4px;">
+          {{ appt.reason }}
+        </div>
+
+        <!-- Quick Status Buttons -->
+        <div style="margin-top: 10px; display: flex; gap: 4px; flex-wrap: wrap;">
+          <form method="POST" action="{% url 'appointment_update_status' appt.id %}">
+            {% csrf_token %}
+            {% if appt.status == 'SCHEDULED' %}
+              <input type="hidden" name="status" value="CHECKED_IN">
+              <button type="submit" class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 4px 8px;">Check-In</button>
+            {% elif appt.status == 'CHECKED_IN' %}
+              <input type="hidden" name="status" value="IN_CHAIR">
+              <button type="submit" class="btn btn-success btn-sm" style="font-size: 0.7rem; padding: 4px 8px;">In Chair</button>
+            {% elif appt.status == 'IN_CHAIR' %}
+              <input type="hidden" name="status" value="COMPLETED">
+              <button type="submit" class="btn btn-primary btn-sm" style="font-size: 0.7rem; padding: 4px 8px;">Done</button>
+            {% endif %}
+          </form>
+          <a href="{% url 'patient_detail' appt.patient.id %}?tab=chart" class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 4px 8px;">
+            Chart
+          </a>
+        </div>
+      </div>
+      {% empty %}
+      <div style="text-align: center; color: var(--slate-400); font-size: 0.82rem; padding: 30px 10px; background: var(--slate-50); border-radius: 8px;">
+        No bookings for this chair on {{ selected_date|date:"M d" }}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Modal: New Appointment -->
+<div id="newApptModal" class="modal-overlay">
+  <div class="modal-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--slate-900);">
+        Book Dental Appointment
+      </h3>
+      <button onclick="document.getElementById('newApptModal').classList.remove('active')" style="background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--slate-400); font-weight: bold;">✕</button>
+    </div>
+
+    <form method="POST" action="{% url 'appointment_create' %}">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Patient *</label>
+        {{ form.patient }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Dentist / Specialist *</label>
+        {{ form.dentist }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Operatory Chair *</label>
+        {{ form.chair }}
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="form-group">
+          <label class="form-label">Date *</label>
+          {{ form.appointment_date }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Start Time *</label>
+          {{ form.start_time }}
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Procedure / Reason for Visit *</label>
+        {{ form.reason }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Clinical Notes</label>
+        {{ form.notes }}
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button type="button" onclick="document.getElementById('newApptModal').classList.remove('active')" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary">Confirm Appointment</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

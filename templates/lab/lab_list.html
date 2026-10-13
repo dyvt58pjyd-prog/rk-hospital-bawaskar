@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% block title %}Dental Lab Tracking - RK Hospital Bawaskar{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+  <div>
+    <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--slate-900);">Dental Lab Work Orders Tracker</h1>
+    <p style="color: var(--slate-500); font-size: 0.9rem;">
+      Zirconia crowns, PFM, aligners, dentures, nightguards fabrication progress and delivery tracking
+    </p>
+  </div>
+  <button onclick="document.getElementById('newLabModal').classList.add('active')" class="btn btn-primary btn-sm">
+    + New Dental Lab Order
+  </button>
+</div>
+
+<!-- Filter Tabs -->
+<div class="card" style="margin-bottom: 24px; padding: 14px 20px;">
+  <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+    <span style="font-size: 0.78rem; font-weight: 700; color: var(--slate-500); text-transform: uppercase;">Filter Status:</span>
+    <a href="{% url 'lab_list' %}" class="badge {% if not status_filter %}badge-primary{% else %}badge-slate{% endif %}">All Cases</a>
+    <a href="?status=IMPRESSION_SENT" class="badge {% if status_filter == 'IMPRESSION_SENT' %}badge-primary{% else %}badge-slate{% endif %}">Sent to Lab</a>
+    <a href="?status=IN_FABRICATION" class="badge {% if status_filter == 'IN_FABRICATION' %}badge-primary{% else %}badge-slate{% endif %}">In Fabrication</a>
+    <a href="?status=RECEIVED" class="badge {% if status_filter == 'RECEIVED' %}badge-success{% else %}badge-slate{% endif %}">Received in Clinic</a>
+    <a href="?status=FITTED_OK" class="badge {% if status_filter == 'FITTED_OK' %}badge-purple{% else %}badge-slate{% endif %}">Fitted / Closed</a>
+  </div>
+</div>
+
+<!-- Lab Cases Table -->
+<div class="card">
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Order #</th>
+          <th>Patient</th>
+          <th>Work Type</th>
+          <th>Teeth</th>
+          <th>Shade</th>
+          <th>Dental Lab</th>
+          <th>Doctor</th>
+          <th>Sent / Delivery</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td style="font-family: monospace; font-weight: 700; color: var(--primary-700);">{{ o.order_number }}</td>
+          <td>
+            <a href="{% url 'patient_detail' o.patient.id %}" style="font-weight: 700; color: var(--slate-900);">
+              {{ o.patient.full_name }}
+            </a>
+          </td>
+          <td style="font-weight: 700;">{{ o.get_work_type_display }}</td>
+          <td style="font-weight: 700;">{{ o.teeth_numbers }}</td>
+          <td><b>{{ o.shade }}</b></td>
+          <td>{{ o.lab_name }}</td>
+          <td style="font-size: 0.82rem;">Dr. {{ o.dentist.last_name }}</td>
+          <td style="font-size: 0.8rem;">
+            Sent: {{ o.sent_date|date:"M d" }}<br>
+            <span style="color: #0284c7; font-weight: 600;">Due: {{ o.expected_delivery|date:"M d, Y" }}</span>
+          </td>
+          <td>
+            {% if o.status == 'FITTED_OK' %}
+              <span class="badge badge-success">Fitted & Done</span>
+            {% elif o.status == 'RECEIVED' %}
+              <span class="badge badge-primary">Received in Clinic</span>
+            {% elif o.status == 'IN_FABRICATION' %}
+              <span class="badge badge-warning">In Fabrication</span>
+            {% else %}
+              <span class="badge badge-slate">{{ o.get_status_display }}</span>
+            {% endif %}
+          </td>
+          <td>
+            <form method="POST" action="{% url 'lab_update_status' o.id %}">
+              {% csrf_token %}
+              {% if o.status == 'IMPRESSION_SENT' %}
+                <input type="hidden" name="status" value="IN_FABRICATION">
+                <button type="submit" class="btn btn-secondary btn-sm" style="font-size: 0.72rem;">In Fab</button>
+              {% elif o.status == 'IN_FABRICATION' %}
+                <input type="hidden" name="status" value="RECEIVED">
+                <button type="submit" class="btn btn-primary btn-sm" style="font-size: 0.72rem;">Mark Received</button>
+              {% elif o.status == 'RECEIVED' %}
+                <input type="hidden" name="status" value="FITTED_OK">
+                <button type="submit" class="btn btn-success btn-sm" style="font-size: 0.72rem;">Mark Fitted</button>
+              {% endif %}
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="10" style="text-align: center; color: var(--slate-400); padding: 30px;">No lab orders found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal: New Lab Order -->
+<div id="newLabModal" class="modal-overlay">
+  <div class="modal-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--slate-900);">Create Dental Lab Order</h3>
+      <button onclick="document.getElementById('newLabModal').classList.remove('active')" style="background:none; border:none; font-size:1.25rem; cursor:pointer;">✕</button>
+    </div>
+
+    <form method="POST" action="{% url 'lab_create' %}">
+      {% csrf_token %}
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="form-group">
+          <label class="form-label">Order Number *</label>
+          {{ form.order_number }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Lab Partner Name *</label>
+          {{ form.lab_name }}
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="form-group">
+          <label class="form-label">Patient *</label>
+          {{ form.patient }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dentist *</label>
+          {{ form.dentist }}
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="form-group">
+          <label class="form-label">Work Type *</label>
+          {{ form.work_type }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teeth Number(s) *</label>
+          {{ form.teeth_numbers }}
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="form-group">
+          <label class="form-label">Shade Guide *</label>
+          {{ form.shade }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Expected Delivery *</label>
+          {{ form.expected_delivery }}
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Technical Instructions</label>
+        {{ form.instructions }}
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button type="button" onclick="document.getElementById('newLabModal').classList.remove('active')" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary">Submit Lab Order</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

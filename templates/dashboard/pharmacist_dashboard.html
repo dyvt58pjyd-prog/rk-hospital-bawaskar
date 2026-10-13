@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Pharmacy & Dental Store - RK Hospital Bawaskar{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+  <div>
+    <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--slate-900);">Pharmacy & Material Store Cockpit</h1>
+    <p style="color: var(--slate-500); font-size: 0.9rem;">
+      Dental anesthetics, composite resins, endodontic files, impression materials, and surgical sundries
+    </p>
+  </div>
+  <div style="display: flex; gap: 10px;">
+    <a href="{% url 'inventory_list' %}" class="btn btn-primary btn-sm">
+      <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      Add Material Item
+    </a>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom: 24px;">
+  <div class="card-header">
+    <div class="card-title">🚨 Low Stock Material Alerts (Immediate Reorder Required)</div>
+    <span class="badge badge-danger">Action Needed</span>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>SKU / Code</th>
+          <th>Material Name</th>
+          <th>Category</th>
+          <th>Current Stock</th>
+          <th>Threshold</th>
+          <th>Supplier</th>
+          <th>Quick Restock</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in low_stock_items %}
+        <tr>
+          <td style="font-family: monospace; font-weight: 700;">{{ item.item_code }}</td>
+          <td style="font-weight: 700;">{{ item.name }}</td>
+          <td><span class="badge badge-slate">{{ item.get_category_display }}</span></td>
+          <td style="color: #e11d48; font-weight: 800;">{{ item.current_stock }} {{ item.unit }}</td>
+          <td>{{ item.reorder_threshold }}</td>
+          <td style="font-size: 0.8rem;">{{ item.supplier_name }}</td>
+          <td>
+            <form method="POST" action="{% url 'inventory_stock_adjust' item.id %}" style="display: flex; gap: 6px; align-items: center;">
+              {% csrf_token %}
+              <input type="number" name="adjustment" value="10" style="width: 60px; padding: 4px 8px; border: 1px solid var(--slate-300); border-radius: 6px; font-size: 0.8rem;">
+              <button type="submit" class="btn btn-primary btn-sm" style="font-size: 0.75rem;">+ Add Stock</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" style="text-align: center; color: var(--slate-400); padding: 20px;">All materials are at healthy stock levels.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

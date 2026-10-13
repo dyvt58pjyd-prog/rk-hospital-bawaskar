@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% block title %}Issue Dental Prescription - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 860px; margin: 0 auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+      <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--slate-900);">Digital Dental Prescription (Rx)</h1>
+      <p style="color: var(--slate-500); font-size: 0.85rem;">
+        Patient: <b>{{ patient.full_name }}</b> ({{ patient.mrn }})
+        {% if patient.has_allergies %}
+          <span class="alert-tag" style="margin-left: 8px;">⚠️ Allergies: {{ patient.allergy_details }}</span>
+        {% endif %}
+      </p>
+    </div>
+    <a href="{% url 'patient_detail' patient.id %}?tab=prescriptions" class="btn btn-secondary btn-sm">← Back to Patient</a>
+  </div>
+
+  <div class="card">
+    <form method="POST">
+      {% csrf_token %}
+      
+      <div class="form-group">
+        <label class="form-label">Prescribing Dentist / Specialist</label>
+        <select name="dentist" class="form-select">
+          {% for d in dentists %}
+            <option value="{{ d.id }}" {% if d == user %}selected{% endif %}>
+              Dr. {{ d.get_full_name }} ({{ d.specialization|default:"Dentist" }})
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Quick Add Common Dental Drugs -->
+      <div style="background: var(--slate-50); border: 1px dashed var(--slate-300); padding: 14px; border-radius: var(--radius-md); margin-bottom: 20px;">
+        <div style="font-weight: 700; font-size: 0.85rem; color: var(--slate-800); margin-bottom: 8px;">
+          ⚡ Quick Presets (Common Dental Medications):
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="addRxItem('Augmentin 625mg', 'TABLET', '1 Tab', 'TDS (3x/day)', '5 days', 'After food with full water')">
+            + Augmentin 625mg (Amox+Clav)
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="addRxItem('Zerodol-SP', 'TABLET', '1 Tab', 'BD (Twice daily)', '3 days', 'Strictly after meals')">
+            + Zerodol-SP (Pain + Swelling)
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="addRxItem('Metrogyl 400mg', 'TABLET', '1 Tab', 'TDS (3x/day)', '5 days', 'After food (Anaerobic infection)')">
+            + Metrogyl 400mg
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="addRxItem('Hexidine 0.2% Mouthwash', 'MOUTHWASH', '10 ml', 'BD (Twice daily)', '7 days', 'Rinse for 1 min and spit. No water for 30m')">
+            + Hexidine Mouthwash
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="addRxItem('Ketorol-DT (Dispersible)', 'TABLET', '1 Tab', 'SOS (When pain)', '3 days', 'Dissolve in 15ml water')">
+            + Ketorol-DT
+          </button>
+        </div>
+      </div>
+
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--slate-900); margin-bottom: 12px;">
+        Prescribed Medicines (Rx)
+      </h3>
+
+      <div class="table-container" style="margin-bottom: 16px;">
+        <table class="data-table" id="rxTable">
+          <thead>
+            <tr>
+              <th style="width: 32%;">Medicine Name</th>
+              <th style="width: 15%;">Form</th>
+              <th style="width: 15%;">Dosage</th>
+              <th style="width: 18%;">Frequency</th>
+              <th style="width: 12%;">Duration</th>
+              <th style="width: 8%;"></th>
+            </tr>
+          </thead>
+          <tbody id="rxBody">
+            <!-- Row 1 Default -->
+            <tr>
+              <td><input type="text" name="medicine_name[]" class="form-input" placeholder="e.g. Augmentin 625mg" required></td>
+              <td>
+                <select name="form[]" class="form-select">
+                  <option value="TABLET">Tablet</option>
+                  <option value="CAPSULE">Capsule</option>
+                  <option value="MOUTHWASH">Mouthwash</option>
+                  <option value="GEL">Oral Gel</option>
+                  <option value="SYRUP">Syrup</option>
+                </select>
+              </td>
+              <td><input type="text" name="dosage[]" class="form-input" value="1 Tab"></td>
+              <td><input type="text" name="frequency[]" class="form-input" value="BD (Twice daily)"></td>
+              <td><input type="text" name="duration[]" class="form-input" value="5 days"></td>
+              <td style="text-align: center;">
+                <input type="hidden" name="instructions[]" value="After meals">
+                <button type="button" onclick="this.closest('tr').remove()" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer;">✕</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <button type="button" onclick="addRxBlankRow()" class="btn btn-secondary btn-sm" style="margin-bottom: 20px;">
+        + Add Another Medicine
+      </button>
+
+      <div class="form-group">
+        <label class="form-label">General Dental Advice & Dietary Precautions</label>
+        <textarea name="general_advice" rows="3" class="form-textarea" placeholder="e.g. Lukewarm salt water rinses 3 times a day. Avoid hot and spicy food for 48 hours. Do not chew on the left operative side."></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+        <a href="{% url 'patient_detail' patient.id %}?tab=prescriptions" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Save & Open Printable Rx</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function addRxBlankRow() {
+    const tbody = document.getElementById('rxBody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" name="medicine_name[]" class="form-input" placeholder="Medicine name" required></td>
+      <td>
+        <select name="form[]" class="form-select">
+          <option value="TABLET">Tablet</option>
+          <option value="CAPSULE">Capsule</option>
+          <option value="MOUTHWASH">Mouthwash</option>
+          <option value="GEL">Oral Gel</option>
+        </select>
+      </td>
+      <td><input type="text" name="dosage[]" class="form-input" value="1 Tab"></td>
+      <td><input type="text" name="frequency[]" class="form-input" value="BD"></td>
+      <td><input type="text" name="duration[]" class="form-input" value="5 days"></td>
+      <td style="text-align: center;">
+        <input type="hidden" name="instructions[]" value="After food">
+        <button type="button" onclick="this.closest('tr').remove()" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer;">✕</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  function addRxItem(name, form, dose, freq, dur, inst) {
+    const tbody = document.getElementById('rxBody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" name="medicine_name[]" class="form-input" value="${name}" required></td>
+      <td>
+        <select name="form[]" class="form-select">
+          <option value="TABLET" ${form==='TABLET'?'selected':''}>Tablet</option>
+          <option value="CAPSULE" ${form==='CAPSULE'?'selected':''}>Capsule</option>
+          <option value="MOUTHWASH" ${form==='MOUTHWASH'?'selected':''}>Mouthwash</option>
+          <option value="GEL" ${form==='GEL'?'selected':''}>Oral Gel</option>
+        </select>
+      </td>
+      <td><input type="text" name="dosage[]" class="form-input" value="${dose}"></td>
+      <td><input type="text" name="frequency[]" class="form-input" value="${freq}"></td>
+      <td><input type="text" name="duration[]" class="form-input" value="${dur}"></td>
+      <td style="text-align: center;">
+        <input type="hidden" name="instructions[]" value="${inst}">
+        <button type="button" onclick="this.closest('tr').remove()" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer;">✕</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  }
+</script>
+{% endblock %}

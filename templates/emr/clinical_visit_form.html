@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}Record Clinical Visit - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 860px; margin: 0 auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+      <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--slate-900);">Clinical Visit & SOAP Notes</h1>
+      <p style="color: var(--slate-500); font-size: 0.85rem;">
+        Patient: <b>{{ patient.full_name }}</b> ({{ patient.mrn }})
+      </p>
+    </div>
+    <a href="{% url 'patient_detail' patient.id %}?tab=visits" class="btn btn-secondary btn-sm">← Back to Patient EMR</a>
+  </div>
+
+  <div class="card">
+    <form method="POST">
+      {% csrf_token %}
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+        <div class="form-group">
+          <label class="form-label">Consulting Dentist *</label>
+          {{ form.dentist }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Visit Date *</label>
+          {{ form.visit_date }}
+        </div>
+      </div>
+
+      <!-- Vitals (Vital for Dental Anesthesia Safety) -->
+      <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--slate-800); margin-bottom: 10px;">
+        Pre-Operative Vitals
+      </h4>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; background: var(--slate-50); padding: 14px; border-radius: var(--radius-md);">
+        <div class="form-group">
+          <label class="form-label">Blood Pressure (BP)</label>
+          {{ form.blood_pressure }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pulse Rate (BPM)</label>
+          {{ form.pulse_rate }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Blood Sugar (RBS / FBS)</label>
+          {{ form.blood_sugar }}
+        </div>
+      </div>
+
+      <!-- Chief Complaint & History -->
+      <div class="form-group">
+        <label class="form-label">Chief Complaint *</label>
+        {{ form.chief_complaint }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">History of Present Illness</label>
+        {{ form.history_of_illness }}
+      </div>
+
+      <!-- SOAP Clinical Sections -->
+      <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-700); margin: 20px 0 10px; border-bottom: 1px solid var(--slate-200); padding-bottom: 6px;">
+        SOAP Clinical Documentation
+      </h4>
+
+      <div class="form-group">
+        <label class="form-label"><b>S</b> - Subjective (Patient symptoms, triggers, radiation of pain)</label>
+        {{ form.subjective }}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label"><b>O</b> - Objective (Intraoral findings, percussion, palpation, lymphadenopathy)</label>
+        {{ form.objective }}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label"><b>A</b> - Assessment (Dental Diagnosis, e.g. Irreversible Pulpitis, Gingivitis) *</label>
+        {{ form.assessment }}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label"><b>P</b> - Plan (Treatment phases & surgical procedures planned) *</label>
+        {{ form.treatment_plan }}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Next Recall / Follow-up Date</label>
+        {{ form.next_recall_date }}
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+        <a href="{% url 'patient_detail' patient.id %}?tab=visits" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Save Clinical Note</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

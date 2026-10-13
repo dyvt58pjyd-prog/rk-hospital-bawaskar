@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% block title %}My Dental Health Portal - RK Hospital Bawaskar{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+  <div>
+    <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--slate-900);">
+      Welcome, {{ patient.full_name|default:user.get_full_name }}
+    </h1>
+    <p style="color: var(--slate-500); font-size: 0.9rem;">
+      Patient Portal • MRN: <b>{{ patient.mrn }}</b> • RK Hospital Bawaskar Dental Care
+    </p>
+  </div>
+</div>
+
+<!-- Medical Alerts notice if any -->
+{% if patient.get_active_medical_alerts %}
+<div style="background: #fff1f2; border: 1px solid #fecdd3; border-radius: var(--radius-md); padding: 16px; margin-bottom: 24px;">
+  <div style="font-weight: 700; color: #9f1239; font-size: 0.9rem; margin-bottom: 6px;">
+    ⚠️ Your Registered Medical Alerts On Record:
+  </div>
+  <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+    {% for a in patient.get_active_medical_alerts %}
+      <span class="alert-tag">{{ a }}</span>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Quick Tabs for Patient -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+  <!-- Appointments -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">My Appointments</div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      {% for appt in appointments %}
+      <div style="padding: 14px; border: 1px solid var(--slate-200); border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div style="font-weight: 700; color: var(--slate-900); font-size: 0.95rem;">
+            {{ appt.appointment_date|date:"l, F d, Y" }} at {{ appt.start_time|time:"H:i" }}
+          </div>
+          <div style="font-size: 0.82rem; color: var(--slate-600); margin-top: 2px;">
+            Dr. {{ appt.dentist.get_full_name }} • {{ appt.chair.name|default:"Main Operatory" }}
+          </div>
+          <div style="font-size: 0.78rem; color: var(--slate-500); margin-top: 4px;">
+            Reason: {{ appt.reason }}
+          </div>
+        </div>
+        <span class="badge {% if appt.status == 'IN_CHAIR' %}badge-success{% elif appt.status == 'CHECKED_IN' %}badge-warning{% else %}badge-primary{% endif %}">
+          {{ appt.get_status_display }}
+        </span>
+      </div>
+      {% empty %}
+      <div style="color: var(--slate-400); text-align: center; padding: 20px;">No scheduled appointments.</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Prescriptions (Rx) -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">My Dental Prescriptions (Rx)</div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      {% for rx in prescriptions %}
+      <div style="padding: 14px; border: 1px solid var(--slate-200); border-radius: var(--radius-md);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div style="font-weight: 700; font-size: 0.9rem; color: var(--slate-800);">
+            Prescribed on {{ rx.prescription_date|date:"M d, Y" }}
+          </div>
+          <a href="{% url 'prescription_print' rx.id %}" target="_blank" class="btn btn-secondary btn-sm" style="font-size: 0.75rem;">
+            Print / View Rx →
+          </a>
+        </div>
+        <div style="font-size: 0.8rem; color: var(--slate-600);">
+          <b>Doctor:</b> Dr. {{ rx.dentist.get_full_name }}
+        </div>
+        <ul style="margin-top: 6px; padding-left: 18px; font-size: 0.82rem; color: var(--slate-700);">
+          {% for item in rx.items.all %}
+            <li><b>{{ item.medicine_name }}</b> ({{ item.dosage }}) - {{ item.frequency }} for {{ item.duration }} ({{ item.instructions }})</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% empty %}
+      <div style="color: var(--slate-400); text-align: center; padding: 20px;">No prescriptions on file.</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Invoices & Receipts -->
+  <div class="card" style="grid-column: span 2;">
+    <div class="card-header">
+      <div class="card-title">My Invoices & Treatment Bills</div>
+    </div>
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Invoice #</th>
+            <th>Date</th>
+            <th>Total Amount</th>
+            <th>Paid</th>
+            <th>Balance Due</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inv in invoices %}
+          <tr>
+            <td style="font-weight: 700; font-family: monospace;">{{ inv.invoice_number }}</td>
+            <td>{{ inv.invoice_date|date:"M d, Y" }}</td>
+            <td style="font-weight: 600;">₹{{ inv.net_payable }}</td>
+            <td style="color: #15803d; font-weight: 600;">₹{{ inv.paid_amount }}</td>
+            <td style="color: #b91c1c; font-weight: 600;">₹{{ inv.balance_amount }}</td>
+            <td>
+              <span class="badge {% if inv.status == 'PAID' %}badge-success{% elif inv.status == 'PARTIAL' %}badge-warning{% else %}badge-danger{% endif %}">
+                {{ inv.get_status_display }}
+              </span>
+            </td>
+            <td>
+              <a href="{% url 'invoice_detail' inv.id %}" class="btn btn-secondary btn-sm" style="font-size: 0.75rem;">
+                View Receipt
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--slate-400); padding: 20px;">No invoices on record.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

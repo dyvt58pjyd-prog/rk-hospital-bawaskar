@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Advanced Odontogram Studio - {{ patient.full_name }} | RK Hospital Bawaskar{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'odontogram_bundle/odontogram.bundle.css' %}">
+<style>
+  .studio-header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    color: #ffffff;
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .studio-patient-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .studio-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: #0284c7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    font-weight: 800;
+  }
+
+  .studio-patient-name {
+    font-size: 1.35rem;
+    font-weight: 800;
+    margin-bottom: 2px;
+  }
+
+  .studio-patient-meta {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .alert-tag {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+
+  .studio-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .studio-canvas-container {
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--slate-200);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    min-height: 720px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="studio-header">
+  <div class="studio-patient-title">
+    <div class="studio-avatar">
+      {{ patient.first_name|first }}{{ patient.last_name|first }}
+    </div>
+    <div>
+      <div class="studio-patient-name">
+        {{ patient.full_name }}
+        <span style="font-size: 0.9rem; font-weight: 500; color: #38bdf8;">({{ patient.mrn }})</span>
+      </div>
+      <div class="studio-patient-meta">
+        <span>Age: {{ patient.age|default:"--" }} yrs</span>
+        <span>•</span>
+        <span>Gender: {{ patient.get_gender_display }}</span>
+        <span>•</span>
+        <span>Blood: {{ patient.blood_group }}</span>
+        {% for alert in patient.get_active_medical_alerts %}
+          <span class="alert-tag">⚠️ {{ alert }}</span>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="studio-actions">
+    <a href="{% url 'patient_detail' patient.id %}?tab=chart" class="btn btn-secondary btn-sm" style="background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.2);">
+      ← Return to Patient 360
+    </a>
+    <a href="{% url 'clinical_visit_create' patient.id %}" class="btn btn-secondary btn-sm" style="background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.2);">
+      + Record SOAP Visit
+    </a>
+    <a href="{% url 'treatment_create' patient.id %}" class="btn btn-primary btn-sm">
+      + Plan Treatment
+    </a>
+  </div>
+</div>
+
+<!-- React Advanced Odontogram Root -->
+<div class="studio-canvas-container">
+  <div
+    id="react-odontogram-root"
+    data-patient-id="{{ patient.id }}"
+    data-patient-name="{{ patient.full_name }}"
+    data-patient-mrn="{{ patient.mrn }}"
+    data-csrf-token="{{ csrf_token }}"
+    data-save-url="{% url 'api_odontogram_state' patient.id %}"
+    data-read-only="{% if read_only %}true{% else %}false{% endif %}"
+    data-user-role="{{ request.user.role }}"
+  >
+    <div style="padding: 40px; text-align: center; color: var(--slate-500);">
+      <div style="font-size: 1.2rem; font-weight: 700; margin-bottom: 8px;">Loading React Advanced Odontogram Studio...</div>
+      <div>Initializing high-precision SVG dental canvas, periodontal matrices, and clinical tooth models...</div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'odontogram_bundle/odontogram.bundle.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var rootEl = document.getElementById('react-odontogram-root');
+    if (rootEl && window.mountAdvancedOdontogram) {
+      window.mountAdvancedOdontogram(rootEl, {
+        patientId: {{ patient.id }},
+        patientName: "{{ patient.full_name|escapejs }}",
+        patientMrn: "{{ patient.mrn|escapejs }}",
+        csrfToken: "{{ csrf_token }}",
+        saveUrl: "{% url 'api_odontogram_state' patient.id %}",
+        readOnly: {% if read_only %}true{% else %}false{% endif %},
+        userRole: "{{ request.user.role }}",
+        onSaveSuccess: function(data) {
+          console.log('[RK Studio] Chart saved:', data);
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

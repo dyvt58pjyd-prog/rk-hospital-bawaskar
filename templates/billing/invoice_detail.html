@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% block title %}Tax Invoice {{ invoice.invoice_number }} - RK Hospital Bawaskar{% endblock %}
+
+{% block content %}
+<div style="max-width: 860px; margin: 0 auto;">
+  <!-- Screen Action Bar (hidden on print) -->
+  <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <a href="{% url 'patient_detail' patient.id %}?tab=billing" class="btn btn-secondary btn-sm">
+      ← Back to Patient EMR
+    </a>
+    <div style="display: flex; gap: 10px;">
+      {% if invoice.balance_amount > 0 %}
+      <button onclick="document.getElementById('payModal').classList.add('active')" class="btn btn-success btn-sm">
+        + Record Payment (₹{{ invoice.balance_amount }})
+      </button>
+      {% endif %}
+      <button onclick="window.print()" class="btn btn-primary btn-sm">
+        🖨️ Print Tax Invoice / Receipt
+      </button>
+    </div>
+  </div>
+
+  <!-- Printable Invoice Document Sheet -->
+  <div class="card print-page" style="padding: 40px; background: #ffffff;">
+    <!-- Hospital Letterhead -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--primary-600); padding-bottom: 20px; margin-bottom: 24px;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+          <div style="width: 44px; height: 44px; background: linear-gradient(135deg, #0ea5e9, #0284c7); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff;">
+            <svg style="width: 26px; height: 26px; fill: none; stroke: #fff; stroke-width: 2.2;" viewBox="0 0 24 24"><path d="M12 2C8.5 2 6 4.5 6 8c0 3.5 1.5 6.5 2 10 .5 3 2 4 4 4s3.5-1 4-4c.5-3.5 2-6.5 2-10 0-3.5-2.5-6-6-6z"/></svg>
+          </div>
+          <div>
+            <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--slate-900); line-height: 1.1;">RK HOSPITAL BAWASKAR</h1>
+            <div style="font-size: 0.8rem; font-weight: 600; color: var(--primary-600); text-transform: uppercase; letter-spacing: 0.05em;">
+              Advanced Dental Care & Maxillofacial Centre
+            </div>
+          </div>
+        </div>
+        <div style="font-size: 0.8rem; color: var(--slate-500); line-height: 1.4;">
+          Opp. City Center, Main Hospital Road, Pune - 411038<br>
+          Phone: +91 98220 11223 • Email: contact@rkhospital.com • Reg No: MH-MED-2024/9912
+        </div>
+      </div>
+
+      <div style="text-align: right;">
+        <span class="badge {% if invoice.status == 'PAID' %}badge-success{% elif invoice.status == 'PARTIAL' %}badge-warning{% else %}badge-danger{% endif %}" style="font-size: 0.9rem; padding: 6px 14px;">
+          {{ invoice.get_status_display }}
+        </span>
+        <div style="font-family: monospace; font-size: 1.1rem; font-weight: 800; color: var(--slate-900); margin-top: 8px;">
+          {{ invoice.invoice_number }}
+        </div>
+        <div style="font-size: 0.82rem; color: var(--slate-500);">
+          Date: <b>{{ invoice.invoice_date|date:"F d, Y" }}</b>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bill To / Patient Details -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; padding: 14px 18px; background: var(--slate-50); border-radius: var(--radius-md); border: 1px solid var(--slate-200);">
+      <div>
+        <div style="font-size: 0.72rem; font-weight: 700; color: var(--slate-500); text-transform: uppercase;">PATIENT PARTICULARS</div>
+        <div style="font-weight: 800; font-size: 1.05rem; color: var(--slate-900); margin-top: 2px;">{{ patient.full_name }}</div>
+        <div style="font-size: 0.82rem; color: var(--slate-600); margin-top: 2px;">
+          MRN: <b>{{ patient.mrn }}</b> • Gender/Age: {{ patient.get_gender_display }}/{{ patient.age|default:"--" }} Yrs
+        </div>
+        <div style="font-size: 0.82rem; color: var(--slate-600);">Phone: {{ patient.phone }}</div>
+      </div>
+      <div>
+        <div style="font-size: 0.72rem; font-weight: 700; color: var(--slate-500); text-transform: uppercase;">BILLING DETAILS</div>
+        <div style="font-size: 0.82rem; color: var(--slate-600); margin-top: 4px;">
+          Issued By: <b>{{ invoice.created_by.get_full_name|default:invoice.created_by.username }}</b>
+        </div>
+        {% if invoice.notes %}
+        <div style="font-size: 0.8rem; color: var(--slate-500); margin-top: 4px;">
+          Notes: {{ invoice.notes }}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Line Items Table -->
+    <div class="table-container" style="margin-bottom: 24px;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 50%;">Dental Procedure / Description</th>
+            <th style="text-align: center;">Qty</th>
+            <th style="text-align: right;">Unit Price (₹)</th>
+            <th style="text-align: right;">Total (₹)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in invoice.items.all %}
+          <tr>
+            <td style="font-weight: 600; color: var(--slate-900);">{{ item.description }}</td>
+            <td style="text-align: center;">{{ item.quantity }}</td>
+            <td style="text-align: right;">₹{{ item.unit_price }}</td>
+            <td style="text-align: right; font-weight: 700;">₹{{ item.total_price }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Calculations Summary -->
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 28px;">
+      <div style="width: 320px; font-size: 0.88rem;">
+        <div style="display: flex; justify-content: space-between; padding: 6px 0; color: var(--slate-600);">
+          <span>Gross Total:</span>
+          <b>₹{{ invoice.total_amount }}</b>
+        </div>
+        {% if invoice.discount_amount > 0 %}
+        <div style="display: flex; justify-content: space-between; padding: 6px 0; color: #15803d;">
+          <span>Discount Applied:</span>
+          <b>- ₹{{ invoice.discount_amount }}</b>
+        </div>
+        {% endif %}
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 1.5px solid var(--slate-200); font-size: 1rem; color: var(--slate-900);">
+          <span>Net Payable:</span>
+          <b style="font-size: 1.1rem; color: var(--primary-700);">₹{{ invoice.net_payable }}</b>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 6px 0; color: #15803d;">
+          <span>Total Paid to Date:</span>
+          <b>₹{{ invoice.paid_amount }}</b>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px dashed var(--slate-300); font-size: 1.05rem; color: {% if invoice.balance_amount > 0 %}#b91c1c{% else %}#15803d{% endif %};">
+          <span>Balance Outstanding:</span>
+          <b>₹{{ invoice.balance_amount }}</b>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payments Ledger -->
+    {% if invoice.payments.all %}
+    <div style="margin-bottom: 28px; border-top: 1px solid var(--slate-200); padding-top: 16px;">
+      <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--slate-700); text-transform: uppercase; margin-bottom: 8px;">
+        Receipt / Payment History
+      </h4>
+      <div class="table-container">
+        <table class="data-table" style="font-size: 0.8rem;">
+          <thead>
+            <tr>
+              <th>Date & Time</th>
+              <th>Mode</th>
+              <th>Reference / UTR</th>
+              <th>Received By</th>
+              <th style="text-align: right;">Amount (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for pay in invoice.payments.all %}
+            <tr>
+              <td>{{ pay.payment_date|date:"M d, Y H:i" }}</td>
+              <td><span class="badge badge-primary">{{ pay.get_payment_method_display }}</span></td>
+              <td style="font-family: monospace;">{{ pay.transaction_reference|default:"--" }}</td>
+              <td>{{ pay.received_by.get_full_name|default:pay.received_by.username }}</td>
+              <td style="text-align: right; font-weight: 700; color: #15803d;">₹{{ pay.amount }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Footer Signatures -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--slate-200);">
+      <div style="font-size: 0.72rem; color: var(--slate-400);">
+        Thank you for choosing RK Hospital Bawaskar.<br>
+        This is a computer-generated electronic medical invoice.
+      </div>
+      <div style="text-align: center;">
+        <div style="font-family: 'Outfit', cursive; font-size: 1.1rem; color: #0284c7;">Dr. R.K. Bawaskar</div>
+        <div style="width: 160px; height: 1px; background: var(--slate-300); margin: 4px 0;"></div>
+        <div style="font-size: 0.75rem; font-weight: 600; color: var(--slate-600);">Authorized Medical Signatory</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Record Payment -->
+<div id="payModal" class="modal-overlay">
+  <div class="modal-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--slate-900);">Record Payment for {{ invoice.invoice_number }}</h3>
+      <button onclick="document.getElementById('payModal').classList.remove('active')" style="background:none; border:none; font-size:1.25rem; cursor:pointer;">✕</button>
+    </div>
+
+    <form method="POST" action="{% url 'invoice_add_payment' invoice.id %}">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Amount (₹) * [Balance: ₹{{ invoice.balance_amount }}]</label>
+        <input type="number" name="amount" class="form-input" value="{{ invoice.balance_amount }}" step="0.01" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Payment Mode *</label>
+        <select name="payment_method" class="form-select">
+          <option value="UPI">UPI (GPay / PhonePe / QR)</option>
+          <option value="CASH">Cash</option>
+          <option value="CARD">Debit / Credit Card</option>
+          <option value="NETBANKING">Net Banking / NEFT</option>
+          <option value="INSURANCE">Insurance / Mediclaim</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Transaction Reference (UTR Number / Auth Code)</label>
+        <input type="text" name="transaction_reference" class="form-input" placeholder="e.g. UPI/49201948210">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <input type="text" name="notes" class="form-input" placeholder="e.g. Received at reception desk">
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button type="button" onclick="document.getElementById('payModal').classList.remove('active')" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-success">Record Payment</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

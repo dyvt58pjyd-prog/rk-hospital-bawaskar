@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+{% block title %}Director Dashboard - RK Hospital Bawaskar{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+  <div>
+    <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--slate-900);">Hospital Director Executive Dashboard</h1>
+    <p style="color: var(--slate-500); font-size: 0.9rem;">
+      Live clinical operations, operatory chair occupancy, and hospital performance metrics • {{ today|date:"l, F d, Y" }}
+    </p>
+  </div>
+  <div style="display: flex; gap: 10px;">
+    <a href="{% url 'appointment_list' %}" class="btn btn-secondary btn-sm">
+      <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line></svg>
+      View All Chairs
+    </a>
+    <a href="{% url 'patient_create' %}" class="btn btn-primary btn-sm">
+      <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      Register Patient
+    </a>
+  </div>
+</div>
+
+<!-- Stat Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 28px;">
+  <div class="stat-card">
+    <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;">
+      <svg style="width: 26px; height: 26px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+    </div>
+    <div>
+      <div class="stat-value">{{ total_patients_count }}</div>
+      <div class="stat-label">Total Registered Patients</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="background: #fef3c7; color: #b45309;">
+      <svg style="width: 26px; height: 26px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line></svg>
+    </div>
+    <div>
+      <div class="stat-value">{{ today_appointments.count }}</div>
+      <div class="stat-label">Today's Appointments</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="background: #dcfce7; color: #15803d;">
+      <svg style="width: 26px; height: 26px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+    </div>
+    <div>
+      <div class="stat-value">₹{{ total_revenue_month|floatformat:0 }}</div>
+      <div class="stat-label">Revenue This Month</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="background: #ede9fe; color: #6d28d9;">
+      <svg style="width: 26px; height: 26px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v6a6 6 0 0 0 12 0V2"></path><line x1="6" y1="2" x2="18" y2="2"></line><line x1="12" y1="14" x2="12" y2="22"></line></svg>
+    </div>
+    <div>
+      <div class="stat-value">{{ active_lab_orders_count }}</div>
+      <div class="stat-label">Dental Lab Cases Active</div>
+    </div>
+  </div>
+</div>
+
+<!-- Operatory Dental Chairs Live View -->
+<div class="card" style="margin-bottom: 28px;">
+  <div class="card-header">
+    <div>
+      <div class="card-title">Live Dental Operatory & Chair Status</div>
+      <div style="font-size: 0.82rem; color: var(--slate-500);">Current chair occupancy and in-procedure dental cases</div>
+    </div>
+    <span class="badge badge-success">● {{ operatories.count }} Active Operatories</span>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+    {% for ch in chair_statuses %}
+    <div style="border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 18px; background: {% if ch.is_occupied %}#f0fdf4; border-color: #86efac;{% else %}#ffffff;{% endif %}">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+        <div>
+          <div style="font-weight: 800; font-size: 0.95rem; color: var(--slate-900);">{{ ch.operatory.name }}</div>
+          <div style="font-size: 0.75rem; color: var(--slate-500);">{{ ch.operatory.specialty_focus }}</div>
+        </div>
+        {% if ch.is_occupied %}
+          <span class="badge badge-success">In Chair</span>
+        {% else %}
+          <span class="badge badge-slate">Available</span>
+        {% endif %}
+      </div>
+
+      {% if ch.current_appt %}
+        <div style="background: #ffffff; border-radius: 8px; padding: 12px; border: 1px solid #bbf7d0;">
+          <div style="font-size: 0.75rem; font-weight: 700; color: #166534; text-transform: uppercase;">Active In-Chair Case</div>
+          <div style="font-weight: 700; font-size: 0.95rem; margin-top: 2px;">
+            <a href="{% url 'patient_detail' ch.current_appt.patient.id %}" style="color: var(--primary-700);">
+              {{ ch.current_appt.patient.full_name }}
+            </a>
+          </div>
+          <div style="font-size: 0.8rem; color: var(--slate-600); margin-top: 2px;">
+            Dr. {{ ch.current_appt.dentist.get_full_name }}
+          </div>
+          <div style="font-size: 0.75rem; color: var(--slate-500); margin-top: 4px;">
+            {{ ch.current_appt.reason }}
+          </div>
+        </div>
+      {% else %}
+        <div style="padding: 16px; background: var(--slate-50); border-radius: 8px; font-size: 0.82rem; color: var(--slate-500); text-align: center;">
+          Chair sanitized & ready for next patient
+          {% if ch.next_appt %}
+            <div style="margin-top: 6px; font-weight: 600; color: var(--slate-700);">
+              Next: {{ ch.next_appt.patient.full_name }} ({{ ch.next_appt.start_time|time:"H:i" }})
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Two Column Layout: Today's OPD Queue & Clinical Lab/Inventory -->
+<div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px;">
+  <!-- Left: Today's Appointments & Chair Queue -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Today's Appointments & Queue</div>
+      <a href="{% url 'appointment_list' %}" style="font-size: 0.82rem; font-weight: 600; color: var(--primary-600);">View Schedule →</a>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Patient</th>
+            <th>Dentist</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for appt in today_appointments %}
+          <tr>
+            <td style="font-weight: 700; white-space: nowrap;">{{ appt.start_time|time:"H:i" }}</td>
+            <td>
+              <a href="{% url 'patient_detail' appt.patient.id %}" style="font-weight: 600; color: var(--primary-700);">
+                {{ appt.patient.full_name }}
+              </a>
+              <div style="font-size: 0.72rem; color: var(--slate-400);">{{ appt.patient.mrn }}</div>
+            </td>
+            <td style="font-size: 0.82rem;">Dr. {{ appt.dentist.last_name }}</td>
+            <td>
+              {% if appt.status == 'IN_CHAIR' %}
+                <span class="badge badge-success">In Chair</span>
+              {% elif appt.status == 'CHECKED_IN' %}
+                <span class="badge badge-warning">Checked In</span>
+              {% elif appt.status == 'COMPLETED' %}
+                <span class="badge badge-purple">Completed</span>
+              {% else %}
+                <span class="badge badge-slate">{{ appt.get_status_display }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{% url 'patient_detail' appt.patient.id %}?tab=chart" class="btn btn-secondary btn-sm" style="font-size: 0.75rem;">
+                Dental EMR
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" style="text-align: center; color: var(--slate-400); padding: 24px;">
+              No appointments scheduled for today yet.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Right: Lab Orders & Material Alerts -->
+  <div style="display: flex; flex-direction: column; gap: 24px;">
+    <!-- Lab Orders -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">In-Flight Dental Lab Orders</div>
+        <a href="{% url 'lab_list' %}" style="font-size: 0.82rem; font-weight: 600; color: var(--primary-600);">All Orders →</a>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        {% for order in active_lab_orders %}
+        <div style="padding: 12px; border: 1px solid var(--slate-200); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-weight: 700; font-size: 0.85rem; color: var(--slate-900);">
+              {{ order.get_work_type_display }}
+            </div>
+            <div style="font-size: 0.75rem; color: var(--slate-500);">
+              Patient: <b>{{ order.patient.full_name }}</b> (Teeth: {{ order.teeth_numbers }})
+            </div>
+            <div style="font-size: 0.72rem; color: var(--slate-400); margin-top: 2px;">
+              {{ order.lab_name }} • Due: {{ order.expected_delivery|date:"M d" }}
+            </div>
+          </div>
+          <span class="badge badge-warning" style="font-size: 0.7rem;">
+            {{ order.get_status_display|truncatewords:2 }}
+          </span>
+        </div>
+        {% empty %}
+        <div style="color: var(--slate-400); font-size: 0.85rem; text-align: center; padding: 12px;">
+          No active lab fabrication cases right now.
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Inventory Stock Alert -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Dental Material Stock Watch</div>
+        <a href="{% url 'inventory_list' %}" style="font-size: 0.82rem; font-weight: 600; color: var(--primary-600);">Store Ledger →</a>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        {% for item in low_stock_items %}
+        <div style="padding: 10px 12px; background: {% if item.is_low_stock %}#fef2f2; border: 1px solid #fecaca;{% else %}var(--slate-50); border: 1px solid var(--slate-200);{% endif %} border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 0.85rem; font-weight: 600; color: var(--slate-800);">{{ item.name }}</div>
+            <div style="font-size: 0.72rem; color: var(--slate-500);">Stock: {{ item.current_stock }} {{ item.unit }}</div>
+          </div>
+          {% if item.is_low_stock %}
+            <span class="badge badge-danger">Low Stock</span>
+          {% else %}
+            <span class="badge badge-success">Optimal</span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
