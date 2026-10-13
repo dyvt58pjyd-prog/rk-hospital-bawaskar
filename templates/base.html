@@ -5,6 +5,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token }}">
+  <meta name="theme-color" content="#0ea5e9">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="RK Hospital">
+  <link rel="manifest" href="{% static 'manifest.json' %}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{% static 'images/icon-192.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'images/icon-192.png' %}">
   <title>{% block title %}RK Hospital Bawaskar{% endblock %} | Advanced Dental EMR</title>
   <link rel="stylesheet" href="{% static 'css/hospital_theme.css' %}">
   {% block extra_head %}{% endblock %}
@@ -209,6 +217,19 @@
       });
     });
   })();
+
+  // Register PWA Service Worker for Android / Chrome
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/static/js/sw.js')
+        .then(function(reg) {
+          console.log('[PWA] Service Worker registered for RK Hospital:', reg.scope);
+        })
+        .catch(function(err) {
+          console.log('[PWA] Service Worker registration failed:', err);
+        });
+    });
+  }
 </script>
 
 {% block extra_scripts %}{% endblock %}
