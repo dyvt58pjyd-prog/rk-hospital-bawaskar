@@ -11,10 +11,10 @@ from dental_core.models import (
 
 
 class Command(BaseCommand):
-    help = 'Seeds initial users, dental catalog, operatories, demo patients, dental charts, appointments, and billing data.'
+    help = 'Seeds initial users, dental catalog, operatories, materials, and ensures patient tables are clean for fresh start.'
 
     def handle(self, *args, **options):
-        self.stdout.write("Seeding RK Hospital Bawaskar system data...")
+        self.stdout.write("Initializing RK Hospital Bawaskar system...")
 
         # 1. Operatories / Dental Chairs
         chair1, _ = DentalOperatory.objects.get_or_create(
@@ -35,22 +35,26 @@ class Command(BaseCommand):
         )
 
         # 2. Roles & Users
-        # Admin / Medical Director
-        admin_user, created = User.objects.get_or_create(username='dr.bawaskar', defaults={
-            'first_name': 'Dr. R.K.',
+        # Primary Hospital Administrator (User requested: username='admin', password='Anurag@268724')
+        admin_user, _ = User.objects.get_or_create(username='admin', defaults={
+            'first_name': 'Admin',
             'last_name': 'Bawaskar',
-            'email': 'dr.bawaskar@rkhospital.com',
+            'email': 'admin@rkhospital.com',
             'role': 'ADMIN',
-            'specialization': 'Maxillofacial Surgeon & Implantologist',
-            'qualification': 'MDS, FIBOMS, Fellow ITI (Switzerland)',
+            'specialization': 'Medical Director & Chief Administrator',
+            'qualification': 'MDS, Oral & Maxillofacial Surgery',
             'license_number': 'MH-DC-44210',
             'phone_number': '+91 98220 11223',
             'is_staff': True,
             'is_superuser': True,
         })
-        if created:
-            admin_user.set_password('admin123')
-            admin_user.save()
+        admin_user.set_password('Anurag@268724')
+        admin_user.first_name = 'Admin'
+        admin_user.last_name = 'Bawaskar'
+        admin_user.role = 'ADMIN'
+        admin_user.is_staff = True
+        admin_user.is_superuser = True
+        admin_user.save()
 
         # Dentist 1 (Endodontist)
         dentist1, created = User.objects.get_or_create(username='dr.sharma', defaults={
@@ -123,18 +127,6 @@ class Command(BaseCommand):
             pharmacist.set_password('pharmacy123')
             pharmacist.save()
 
-        # Patient Portal User
-        patient_user, created = User.objects.get_or_create(username='patient.raj', defaults={
-            'first_name': 'Rajesh',
-            'last_name': 'Malhotra',
-            'email': 'rajesh.malhotra@gmail.com',
-            'role': 'PATIENT',
-            'phone_number': '+91 98111 22334',
-        })
-        if created:
-            patient_user.set_password('patient123')
-            patient_user.save()
-
         # 3. Procedure Catalog
         procedures_data = [
             # Diagnostic
@@ -169,13 +161,11 @@ class Command(BaseCommand):
             ('C-801', 'In-Office Laser Teeth Whitening (Power Bleaching)', 'COSMETIC', Decimal('8000.00'), '35% Hydrogen Peroxide light-activated bleaching (3 cycles)'),
         ]
 
-        catalog_objs = {}
         for code, name, cat, fee, desc in procedures_data:
-            proc, _ = ProcedureCatalog.objects.get_or_create(
+            ProcedureCatalog.objects.get_or_create(
                 code=code,
                 defaults={'name': name, 'category': cat, 'standard_fee': fee, 'description': desc, 'is_active': True}
             )
-            catalog_objs[code] = proc
 
         # 4. Inventory Items
         inventory_data = [
@@ -203,343 +193,23 @@ class Command(BaseCommand):
                 }
             )
 
-        # 5. Demo Patients
-        # Patient 1: Rajesh Malhotra (Has web login)
-        p1, _ = Patient.objects.get_or_create(
-            mrn='RKH-2026-0001',
-            defaults={
-                'user': patient_user,
-                'first_name': 'Rajesh',
-                'last_name': 'Malhotra',
-                'phone': '+91 98111 22334',
-                'email': 'rajesh.malhotra@gmail.com',
-                'date_of_birth': datetime.date(1986, 5, 14),
-                'gender': 'M',
-                'blood_group': 'B+',
-                'address': 'Flat 402, Royal Residency, Pune - 411038',
-                'emergency_contact_name': 'Sunita Malhotra (Wife)',
-                'emergency_contact_phone': '+91 98111 55667',
-                'has_diabetes': True,
-                'has_hypertension': False,
-                'has_allergies': True,
-                'allergy_details': 'Penicillin (Severe Rash/Urticaria)',
-                'current_medications': 'Metformin 500mg BD for Type 2 DM',
-                'medical_history_notes': 'HbA1c: 6.8% checked 2 months ago. Avoid Penicillin/Amoxicillin.',
-            }
-        )
+        # 5. Clean Fresh Start: Keep all Patient and Clinical Case records 100% empty
+        Patient.objects.all().delete()
+        Appointment.objects.all().delete()
+        ToothRecord.objects.all().delete()
+        ClinicalVisit.objects.all().delete()
+        TreatmentItem.objects.all().delete()
+        DentalLabOrder.objects.all().delete()
+        DentalRadiograph.objects.all().delete()
+        Prescription.objects.all().delete()
+        PrescriptionItem.objects.all().delete()
+        Invoice.objects.all().delete()
+        InvoiceItem.objects.all().delete()
+        Payment.objects.all().delete()
 
-        # Patient 2: Sunita Deshpande
-        p2, _ = Patient.objects.get_or_create(
-            mrn='RKH-2026-0002',
-            defaults={
-                'first_name': 'Sunita',
-                'last_name': 'Deshpande',
-                'phone': '+91 94220 88990',
-                'email': 'sunita.deshpande@outlook.com',
-                'date_of_birth': datetime.date(1992, 11, 20),
-                'gender': 'F',
-                'blood_group': 'O+',
-                'address': 'Plot 15, Green Acres, Aundh, Pune',
-                'emergency_contact_name': 'Nikhil Deshpande',
-                'emergency_contact_phone': '+91 94220 11223',
-                'has_cardiac_condition': False,
-                'has_asthma': False,
-                'is_pregnant': False,
-                'has_allergies': False,
-                'medical_history_notes': 'No known systemic illnesses.',
-            }
-        )
+        # Delete any dummy demo patient user
+        User.objects.filter(username__in=['patient.raj', 'patient']).delete()
 
-        # Patient 3: Anil Kulkarni (Senior citizen, Hypertension + Cardiac)
-        p3, _ = Patient.objects.get_or_create(
-            mrn='RKH-2026-0003',
-            defaults={
-                'first_name': 'Anil',
-                'last_name': 'Kulkarni',
-                'phone': '+91 98900 12345',
-                'email': 'kulkarni.anil@yahoo.co.in',
-                'date_of_birth': datetime.date(1960, 3, 10),
-                'gender': 'M',
-                'blood_group': 'A+',
-                'address': 'Shubham Heights, Kothrud, Pune',
-                'emergency_contact_name': 'Sachin Kulkarni (Son)',
-                'emergency_contact_phone': '+91 98900 67890',
-                'has_hypertension': True,
-                'has_cardiac_condition': True,
-                'has_bleeding_disorder': False,
-                'current_medications': 'Telmisartan 40mg OD, Ecosprin 75mg OD (Blood thinner)',
-                'medical_history_notes': 'Ecosprin stopped in consultation with cardiologist before surgical extraction.',
-            }
-        )
-
-        # Patient 4: Ananya Patil (Pediatric / Orthodontic)
-        p4, _ = Patient.objects.get_or_create(
-            mrn='RKH-2026-0004',
-            defaults={
-                'first_name': 'Ananya',
-                'last_name': 'Patil',
-                'phone': '+91 97654 32100',
-                'email': 'patil.parent@gmail.com',
-                'date_of_birth': datetime.date(2012, 8, 15),
-                'gender': 'F',
-                'blood_group': 'AB+',
-                'address': 'Silver Crest, Baner, Pune',
-                'emergency_contact_name': 'Mahesh Patil (Father)',
-                'emergency_contact_phone': '+91 97654 32100',
-                'has_asthma': True,
-                'medical_history_notes': 'Mild seasonal asthma, carries Salbutamol inhaler.',
-            }
-        )
-
-        # 6. Odontogram / Tooth Records for Patient 1 (Rajesh Malhotra)
-        # FDI teeth standard 32 adult teeth
-        # Tooth 16: Caries on Occlusal + Mesial
-        # Tooth 26: Root Canal Treated + Crown Planned
-        # Tooth 36: Full Crown
-        # Tooth 46: Filled (Composite)
-        # Tooth 18, 28: Missing / Extracted
-        # Tooth 38, 48: Impacted
-        teeth_statuses_p1 = {
-            16: ('CARIES', True, False, True, False, False, "Deep dentinal caries encroaching pulp. Sensitive to cold."),
-            26: ('RCT', False, False, True, False, False, "Completed 3 canals obturation. Advised Zirconia Crown."),
-            36: ('CROWN', False, False, False, False, False, "PFM crown fitted 2 years ago, margins healthy."),
-            46: ('FILLED', False, True, True, False, False, "MOD Composite restoration intact."),
-            18: ('MISSING', False, False, False, False, False, "Extracted 5 years ago."),
-            28: ('MISSING', False, False, False, False, False, "Congenitally missing / extracted."),
-            38: ('IMPACTED', False, False, False, False, False, "Mesioangular impaction, pericoronitis episodes."),
-            48: ('IMPACTED', False, False, False, False, False, "Vertical impaction."),
-            11: ('HEALTHY', False, False, False, False, False, "Sound tooth structure."),
-            21: ('HEALTHY', False, False, False, False, False, "Sound tooth structure."),
-        }
-
-        for t_num in range(11, 49):
-            if t_num % 10 in [9, 0]: continue # valid FDI only has 1-8 per quadrant
-            status_info = teeth_statuses_p1.get(t_num, ('HEALTHY', False, False, False, False, False, ""))
-            status, m, d, o, b, l, notes = status_info
-            ToothRecord.objects.update_or_create(
-                patient=p1,
-                tooth_number=t_num,
-                defaults={
-                    'status': status,
-                    'mesial': m,
-                    'distal': d,
-                    'occlusal': o,
-                    'buccal': b,
-                    'lingual': l,
-                    'pocket_depth_mm': 4 if t_num == 38 else 2,
-                    'clinical_notes': notes,
-                    'last_updated_by': admin_user,
-                }
-            )
-
-        # 7. Appointments for Today & Tomorrow
-        today = timezone.now().date()
-        Appointment.objects.get_or_create(
-            patient=p1,
-            dentist=dentist1,
-            appointment_date=today,
-            start_time=datetime.time(10, 30),
-            defaults={
-                'chair': chair1,
-                'end_time': datetime.time(11, 15),
-                'reason': 'Sitting 2: RCT Biomechanical Prep & Obturation i.r.t 26',
-                'status': 'IN_CHAIR',
-                'notes': 'Allergic to Penicillin - prescribed Cefixime instead.'
-            }
-        )
-
-        Appointment.objects.get_or_create(
-            patient=p2,
-            dentist=dentist1,
-            appointment_date=today,
-            start_time=datetime.time(11, 30),
-            defaults={
-                'chair': chair4,
-                'end_time': datetime.time(12, 15),
-                'reason': 'Full Mouth Ultrasonic Scaling & Stain Removal',
-                'status': 'CHECKED_IN',
-                'notes': 'Patient arrived at OPD desk, waiting in lounge.'
-            }
-        )
-
-        Appointment.objects.get_or_create(
-            patient=p3,
-            dentist=admin_user,
-            appointment_date=today,
-            start_time=datetime.time(14, 0),
-            defaults={
-                'chair': chair2,
-                'end_time': datetime.time(15, 0),
-                'reason': 'Surgical Extraction of Grossly Carious 37 under Local Anesthesia',
-                'status': 'CONFIRMED',
-                'notes': 'Check BP before local anesthetic infiltration. Blood thinner stopped 3 days prior.'
-            }
-        )
-
-        Appointment.objects.get_or_create(
-            patient=p4,
-            dentist=dentist2,
-            appointment_date=today,
-            start_time=datetime.time(16, 0),
-            defaults={
-                'chair': chair3,
-                'end_time': datetime.time(16, 45),
-                'reason': 'Clear Aligner Tray #4 Delivery & Attachment Check',
-                'status': 'SCHEDULED',
-                'notes': 'Review tracking on maxillary lateral incisors.'
-            }
-        )
-
-        # 8. Clinical Visit with SOAP Notes for Patient 1
-        visit1, _ = ClinicalVisit.objects.get_or_create(
-            patient=p1,
-            dentist=dentist1,
-            visit_date=today,
-            defaults={
-                'chief_complaint': 'Severe throbbing pain in upper left back tooth on drinking cold water and chewing since 4 days.',
-                'history_of_illness': 'Pain started mild a week ago, exacerbated over last 48 hours, radiating to left temporal region.',
-                'blood_pressure': '124/82 mmHg',
-                'pulse_rate': 74,
-                'blood_sugar': 'RBS: 128 mg/dL',
-                'subjective': 'Patient reports constant dull ache with acute sharp episodes provoked by temperature changes. Disturbed sleep last night.',
-                'objective': 'Tooth 26 exhibits deep disto-occlusal caries. Tender to vertical percussion (+). Electric pulp test shows hypersensitive response. Soft tissues normal, no sinus tract.',
-                'assessment': 'Acute Irreversible Pulpitis with symptomatic apical periodontitis i.r.t Tooth 26.',
-                'treatment_plan': '1. Multi-canal Root Canal Treatment i.r.t 26 (MB1, MB2, DB, Palatal).\n2. Post-endodontic Core Build-up.\n3. Full Contour Monolithic Zirconia Crown.',
-                'next_recall_date': today + datetime.timedelta(days=7),
-            }
-        )
-
-        # 9. Treatments for Patient 1
-        t_rct, _ = TreatmentItem.objects.get_or_create(
-            patient=p1,
-            procedure=catalog_objs['E-302'],
-            tooth_number='26',
-            defaults={
-                'dentist': dentist1,
-                'status': 'COMPLETED',
-                'cost': Decimal('4500.00'),
-                'discount': Decimal('0.00'),
-                'notes': 'Canals shaped and obturated with AH Plus + 4% gutta-percha cones. Post-op X-ray satisfactory.',
-                'completed_date': timezone.now()
-            }
-        )
-
-        t_crown, _ = TreatmentItem.objects.get_or_create(
-            patient=p1,
-            procedure=catalog_objs['PR-401'],
-            tooth_number='26',
-            defaults={
-                'dentist': dentist1,
-                'status': 'IN_PROGRESS',
-                'cost': Decimal('8500.00'),
-                'discount': Decimal('500.00'),
-                'notes': 'Tooth preparation completed, elastomeric impression taken and sent to DentCraft Lab.',
-            }
-        )
-
-        # 10. Dental Lab Order for Patient 1
-        lab_order, _ = DentalLabOrder.objects.get_or_create(
-            order_number='LAB-2026-0042',
-            defaults={
-                'lab_name': 'DentCraft CAD/CAM Dental Solutions',
-                'patient': p1,
-                'dentist': dentist1,
-                'teeth_numbers': '26',
-                'work_type': 'ZIRCONIA_CROWN',
-                'shade': 'VITA A2 with moderate cervical saturation',
-                'sent_date': today - datetime.timedelta(days=2),
-                'expected_delivery': today + datetime.timedelta(days=2),
-                'status': 'IN_FABRICATION',
-                'lab_charges': Decimal('2200.00'),
-                'instructions': 'Chamfer finish line, tight proximal contacts, keep clearance in centric occlusion 1.5mm.',
-            }
-        )
-
-        # 11. Prescription for Patient 1
-        rx1, _ = Prescription.objects.get_or_create(
-            patient=p1,
-            dentist=dentist1,
-            clinical_visit=visit1,
-            defaults={
-                'prescription_date': today,
-                'general_advice': 'Avoid chewing hard food on left side until crown is cemented. Rinse mouth with lukewarm saline water 3 times a day.',
-            }
-        )
-
-        PrescriptionItem.objects.get_or_create(
-            prescription=rx1,
-            medicine_name='Cefixime 200mg (Note: Patient Penicillin Allergic)',
-            defaults={
-                'form': 'TABLET',
-                'dosage': '1 Tablet',
-                'frequency': 'BD (Twice daily)',
-                'duration': '5 days',
-                'instructions': 'After breakfast and after dinner',
-            }
-        )
-        PrescriptionItem.objects.get_or_create(
-            prescription=rx1,
-            medicine_name='Zerodol-SP (Aceclofenac 100mg + Paracetamol 325mg + Serratiopeptidase 15mg)',
-            defaults={
-                'form': 'TABLET',
-                'dosage': '1 Tablet',
-                'frequency': 'BD (Twice daily)',
-                'duration': '3 days',
-                'instructions': 'Strictly after food with full glass of water',
-            }
-        )
-        PrescriptionItem.objects.get_or_create(
-            prescription=rx1,
-            medicine_name='Hexidine 0.2% Chlorhexidine Gluconate Mouthwash',
-            defaults={
-                'form': 'MOUTHWASH',
-                'dosage': '10 ml rinse',
-                'frequency': 'BD (Twice daily)',
-                'duration': '7 days',
-                'instructions': 'Swish vigorously for 1 minute and spit. Do not eat/drink for 30 minutes.',
-            }
-        )
-
-        # 12. Billing / Invoice for Patient 1
-        inv1, _ = Invoice.objects.get_or_create(
-            invoice_number='INV-2026-0101',
-            defaults={
-                'patient': p1,
-                'created_by': admin_user,
-                'invoice_date': today,
-                'total_amount': Decimal('13000.00'),
-                'discount_amount': Decimal('500.00'),
-                'tax_amount': Decimal('0.00'),
-                'net_payable': Decimal('12500.00'),
-                'paid_amount': Decimal('8000.00'),
-                'balance_amount': Decimal('4500.00'),
-                'status': 'PARTIAL',
-                'notes': 'Advance paid for RCT & Zirconia Crown. Balance due on crown cementation.',
-            }
-        )
-
-        InvoiceItem.objects.get_or_create(
-            invoice=inv1,
-            description='Root Canal Treatment - Molar (#26)',
-            defaults={'treatment_item': t_rct, 'quantity': 1, 'unit_price': Decimal('4500.00'), 'total_price': Decimal('4500.00')}
-        )
-        InvoiceItem.objects.get_or_create(
-            invoice=inv1,
-            description='CAD/CAM Multi-layered Zirconia Crown (#26)',
-            defaults={'treatment_item': t_crown, 'quantity': 1, 'unit_price': Decimal('8500.00'), 'total_price': Decimal('8500.00')}
-        )
-
-        Payment.objects.get_or_create(
-            invoice=inv1,
-            amount=Decimal('8000.00'),
-            defaults={
-                'payment_method': 'UPI',
-                'transaction_reference': 'UPI/428919204812/HDFC',
-                'payment_date': timezone.now(),
-                'received_by': receptionist,
-                'notes': 'Received via Google Pay'
-            }
-        )
-        inv1.update_totals()
-
-        self.stdout.write(self.style.SUCCESS("Successfully seeded RK Hospital Bawaskar system!"))
+        self.stdout.write(self.style.SUCCESS("RK Hospital Bawaskar system ready: Procedure Catalog, Operatory Chairs & Inventory active."))
+        self.stdout.write(self.style.SUCCESS("All patient tables are 100% CLEAN and FRESH (0 patients)."))
+        self.stdout.write(self.style.SUCCESS("Primary Admin credentials active: username='admin' | password='Anurag@268724'"))

@@ -46,15 +46,13 @@ def login_view(request):
         else:
             messages.error(request, "Invalid username or password. Please try again or use the quick login demo accounts.")
 
-    # Fetch demo user options to make testing seamless
+    # Pre-configured staff accounts
     demo_accounts = [
-        {'role': 'Hospital Director (Admin)', 'username': 'dr.bawaskar', 'name': 'Dr. R.K. Bawaskar', 'badge': 'bg-rose-500', 'spec': 'Maxillofacial Surgeon'},
-        {'role': 'Endodontist (Dentist)', 'username': 'dr.sharma', 'name': 'Dr. Priya Sharma', 'badge': 'bg-cyan-600', 'spec': 'Endodontics & RCT Specialist'},
-        {'role': 'Orthodontist (Dentist)', 'username': 'dr.kapoor', 'name': 'Dr. Rohan Kapoor', 'badge': 'bg-cyan-600', 'spec': 'Orthodontics & Aligners'},
-        {'role': 'Front Desk (Reception)', 'username': 'reception', 'name': 'Sneha Verma', 'badge': 'bg-amber-500', 'spec': 'OPD & Patient Care'},
-        {'role': 'Dental Hygienist (Nurse)', 'username': 'hygienist', 'name': 'Pooja Shinde', 'badge': 'bg-emerald-600', 'spec': 'Prophylaxis & Sterilization'},
-        {'role': 'Pharmacy & Inventory', 'username': 'pharmacy', 'name': 'Amit Deshmukh', 'badge': 'bg-purple-600', 'spec': 'Dental Store & Billing'},
-        {'role': 'Patient Portal', 'username': 'patient.raj', 'name': 'Rajesh Malhotra', 'badge': 'bg-blue-500', 'spec': 'Active Dental Patient'},
+        {'role': 'Hospital Director (Admin)', 'username': 'admin', 'name': 'Admin (Dr. Anurag Bawaskar)', 'badge': 'bg-rose-500', 'spec': 'Super Administrator • Full Access', 'pass_hint': 'Anurag@268724'},
+        {'role': 'Senior Dentist (Endodontist)', 'username': 'dr.sharma', 'name': 'Dr. Priya Sharma', 'badge': 'bg-cyan-600', 'spec': 'Endodontics & Visual EMR Charting', 'pass_hint': 'dentist123'},
+        {'role': 'Front Desk (Reception)', 'username': 'reception', 'name': 'Sneha Verma', 'badge': 'bg-amber-500', 'spec': 'OPD Appointments & Billing Desk', 'pass_hint': 'reception123'},
+        {'role': 'Dental Hygienist (Nurse)', 'username': 'hygienist', 'name': 'Pooja Shinde', 'badge': 'bg-emerald-600', 'spec': 'Prophylaxis & Sterilization', 'pass_hint': 'hygienist123'},
+        {'role': 'Pharmacy & Inventory', 'username': 'pharmacy', 'name': 'Amit Deshmukh', 'badge': 'bg-purple-600', 'spec': 'Dental Store & Material Dispensary', 'pass_hint': 'pharmacy123'},
     ]
 
     return render(request, 'auth/login.html', {'demo_accounts': demo_accounts})

@@ -91,8 +91,20 @@
         </tr>
         {% empty %}
         <tr>
-          <td colspan="8" style="text-align: center; color: var(--slate-400); padding: 30px;">
-            No patients match your search criteria.
+          <td colspan="8" style="text-align: center; color: var(--slate-500); padding: 48px 20px;">
+            <div style="width: 56px; height: 56px; background: #e0f2fe; color: #0284c7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 1.6rem;">
+              👥
+            </div>
+            <div style="font-size: 1.1rem; font-weight: 800; color: var(--slate-800); margin-bottom: 6px;">
+              No Patients Registered Yet
+            </div>
+            <div style="font-size: 0.85rem; color: var(--slate-500); max-width: 420px; margin: 0 auto 18px;">
+              The hospital system is completely clean and ready for live clinical work. Click below to register your first patient.
+            </div>
+            <a href="{% url 'patient_create' %}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+              <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              + Register First Patient
+            </a>
           </td>
         </tr>
         {% endfor %}

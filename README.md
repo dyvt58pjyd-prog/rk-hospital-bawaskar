@@ -39,19 +39,19 @@ A specialized Django-based Hospital Management System with an Interactive Dental
 
 ## 👥 Role-Based Logins & Credentials
 
-Every role has an account pre-seeded in the database:
+The system is configured with a **fresh database (0 patients)** and the following pre-configured staff accounts:
 
 | Role | Username | Password | Full Name & Title | Specialty Focus |
 |---|---|---|---|---|
-| **Hospital Director (Admin)** | `dr.bawaskar` | `admin123` | Dr. R.K. Bawaskar | Maxillofacial Surgery & Implants |
-| **Endodontist (Dentist)** | `dr.sharma` | `dentist123` | Dr. Priya Sharma | Conservative Dentistry & RCT |
+| **Hospital Director & Super Administrator** | `admin` | `Anurag@268724` | Admin (Dr. Anurag Bawaskar) | Medical Director • Full Master Access |
+| **Senior Dentist (Endodontist)** | `dr.sharma` | `dentist123` | Dr. Priya Sharma | Conservative Dentistry & Visual EMR |
 | **Orthodontist (Dentist)** | `dr.kapoor` | `dentist123` | Dr. Rohan Kapoor | Orthodontics & Clear Aligners |
 | **Front Desk (Reception)** | `reception` | `reception123` | Sneha Verma | OPD Coordination & Registration |
 | **Dental Hygienist (Nurse)** | `hygienist` | `hygienist123` | Pooja Shinde | Prophylaxis & Sterilization |
 | **Pharmacy / Store Manager** | `pharmacy` | `pharmacy123` | Amit Deshmukh | Material Store & Dispensary |
-| **Patient Portal User** | `patient.raj` | `patient123` | Rajesh Malhotra | Active Patient (MRN: RKH-2026-0001) |
 
-> ⚡ **Quick Login Feature:** The login screen (`http://127.0.0.1:8000/login/`) includes a one-click button matrix to log in as any role instantly.
+> ⚡ **Clean Fresh State:** All mock patients have been cleared. Log in as **`admin`** to start adding real patients and clinical records.
+> ⚡ **Quick Login:** The login screen (`/login/`) includes an **Auto-Fill Admin** button to enter credentials with one tap.
 
 ---
 
