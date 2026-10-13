@@ -193,23 +193,8 @@ class Command(BaseCommand):
                 }
             )
 
-        # 5. Clean Fresh Start: Keep all Patient and Clinical Case records 100% empty
-        Patient.objects.all().delete()
-        Appointment.objects.all().delete()
-        ToothRecord.objects.all().delete()
-        ClinicalVisit.objects.all().delete()
-        TreatmentItem.objects.all().delete()
-        DentalLabOrder.objects.all().delete()
-        DentalRadiograph.objects.all().delete()
-        Prescription.objects.all().delete()
-        PrescriptionItem.objects.all().delete()
-        Invoice.objects.all().delete()
-        InvoiceItem.objects.all().delete()
-        Payment.objects.all().delete()
-
-        # Delete any dummy demo patient user
-        User.objects.filter(username__in=['patient.raj', 'patient']).delete()
-
-        self.stdout.write(self.style.SUCCESS("RK Hospital Bawaskar system ready: Procedure Catalog, Operatory Chairs & Inventory active."))
-        self.stdout.write(self.style.SUCCESS("All patient tables are 100% CLEAN and FRESH (0 patients)."))
-        self.stdout.write(self.style.SUCCESS("Primary Admin account active: username='admin' (Password configured)."))
+        # 5. Data Preservation Check
+        patient_count = Patient.objects.count()
+        self.stdout.write(self.style.SUCCESS(f"RK Hospital Bawaskar system ready: Procedure Catalog, Operatory Chairs & Inventory active."))
+        self.stdout.write(self.style.SUCCESS(f"Patient EMR records safely preserved: {patient_count} active patients on record."))
+        self.stdout.write(self.style.SUCCESS("Primary Admin account active: username='admin'."))
