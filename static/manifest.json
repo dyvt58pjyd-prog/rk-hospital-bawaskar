@@ -2,7 +2,7 @@
   "name": "RK Hospital Bawaskar - Dental EMR",
   "short_name": "RK Dental",
   "description": "Advanced Dental Hospital Management & Visual EMR System",
-  "start_url": "/dashboard/",
+  "start_url": "/mobile/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0f172a",

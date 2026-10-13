@@ -1173,3 +1173,97 @@ def whatsapp_send(request, patient_id):
 
     return redirect(wa_url)
 
+
+# ==========================================
+# NATIVE MOBILE COMPANION APP FOR ANDROID
+# ==========================================
+
+@login_required
+def mobile_companion_view(request):
+    """
+    Dedicated Android/Mobile companion interface for doctors and clinical staff.
+    Optimized for single-hand mobile touch navigation, rapid patient lookup,
+    direct camera X-ray capture, and real-time operatory chair queue monitoring.
+    """
+    today = timezone.now().date()
+    operatories = DentalOperatory.objects.filter(is_active=True).order_by('chair_number')
+
+    # Today's appointments with dentist and chair
+    today_appointments = Appointment.objects.filter(
+        appointment_date=today
+    ).select_related('patient', 'dentist', 'chair').order_by('start_time')
+
+    # Map current active appointment per chair
+    chair_status = []
+    for chair in operatories:
+        active_appt = today_appointments.filter(
+            chair=chair, status__in=['IN_CHAIR', 'CHECKED_IN', 'SCHEDULED']
+        ).first()
+        chair_status.append({
+            'operatory': chair,
+            'active_appointment': active_appt,
+        })
+
+    # Recent patients
+    recent_patients = Patient.objects.all().order_by('-created_at')[:20]
+    all_patients = Patient.objects.all().order_by('first_name', 'last_name')
+
+    # Metrics
+    today_invoices = Invoice.objects.filter(invoice_date=today)
+    today_revenue = today_invoices.aggregate(Sum('paid_amount'))['paid_amount__sum'] or Decimal('0.00')
+    total_patients_count = Patient.objects.count()
+    pending_lab_count = DentalLabOrder.objects.exclude(status='FITTED_OK').count()
+
+    # Form for quick patient registration modal
+    patient_form = PatientForm()
+    dentists = User.objects.filter(role__in=['DENTIST', 'ADMIN'])
+
+    context = {
+        'today': today,
+        'chair_status': chair_status,
+        'today_appointments': today_appointments,
+        'recent_patients': recent_patients,
+        'all_patients': all_patients,
+        'today_revenue': today_revenue,
+        'total_patients_count': total_patients_count,
+        'pending_lab_count': pending_lab_count,
+        'patient_form': patient_form,
+        'dentists': dentists,
+        'operatories': operatories,
+    }
+    return render(request, 'mobile/mobile_dashboard.html', context)
+
+
+@login_required
+def mobile_quick_radiograph(request):
+    """
+    Direct endpoint for Android camera photo & radiograph uploads.
+    Auto-attaches to selected patient with tooth/quadrant tag.
+    """
+    if request.method == 'POST':
+        patient_id = request.POST.get('patient_id')
+        patient = get_object_or_404(Patient, pk=patient_id)
+        image = request.FILES.get('image')
+        if not image:
+            messages.error(request, "No image captured. Please select or take a photo.")
+            return redirect('mobile_companion')
+
+        image_type = request.POST.get('image_type', 'INTRAORAL_PHOTO')
+        tooth_number = request.POST.get('tooth_number', '').strip()
+        notes = request.POST.get('clinical_notes', '').strip()
+
+        dentist = request.user if (request.user.is_dentist() or request.user.is_admin()) else User.objects.filter(role='DENTIST').first() or request.user
+
+        rad = DentalRadiograph.objects.create(
+            patient=patient,
+            dentist=dentist,
+            image=image,
+            image_type=image_type,
+            tooth_number=tooth_number or 'Oral Cavity',
+            clinical_notes=notes or 'Captured via Android Mobile Companion'
+        )
+        messages.success(request, f"✓ Dental photo saved to {patient.full_name}'s EMR!")
+        return redirect('mobile_companion')
+
+    return redirect('mobile_companion')
+

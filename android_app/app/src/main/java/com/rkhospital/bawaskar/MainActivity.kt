@@ -16,8 +16,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private var fileUploadCallback: ValueCallback<Array<Uri>>? = null
 
-    // Point this to your live Render hospital URL
-    private val hospitalPortalUrl = "https://rk-hospital-bawaskar.onrender.com/login/"
+    // Points to the dedicated Android Mobile Doctor Companion interface
+    private val hospitalPortalUrl = "https://rk-hospital-bawaskar.onrender.com/mobile/"
 
     private val fileChooserLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()

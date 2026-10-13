@@ -62,4 +62,8 @@ urlpatterns = [
 
     # WhatsApp Notifications
     path('patients/<int:patient_id>/whatsapp/', views.whatsapp_send, name='whatsapp_send'),
+
+    # Android Mobile Companion App
+    path('mobile/', views.mobile_companion_view, name='mobile_companion'),
+    path('mobile/quick-radiograph/', views.mobile_quick_radiograph, name='mobile_quick_radiograph'),
 ]
