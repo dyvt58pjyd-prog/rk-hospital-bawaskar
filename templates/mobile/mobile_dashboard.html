@@ -4,28 +4,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#090e17">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>RK Dental App • Doctor Pocket Companion</title>
+  <title>RK Dental • Doctor Mobile Companion</title>
   <link rel="manifest" href="{% static 'manifest.json' %}">
   <link rel="stylesheet" href="{% static 'css/hospital_theme.css' %}">
   <style>
     :root {
       --mobile-bg: #090e17;
       --mobile-card: #131d2e;
+      --mobile-card-hover: #1b283d;
       --mobile-border: #1e2e47;
       --mobile-accent: #0ea5e9;
       --mobile-success: #10b981;
+      --mobile-warning: #f59e0b;
+      --mobile-danger: #ef4444;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
     body {
       background: var(--mobile-bg);
       color: #f1f5f9;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
-      padding-bottom: 84px;
-      -webkit-tap-highlight-color: transparent;
+      padding-bottom: 90px;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     /* Native App Top Bar */
@@ -33,9 +41,9 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(15, 23, 42, 0.95);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      background: rgba(9, 14, 23, 0.96);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--mobile-border);
       padding: 12px 16px;
     }
@@ -47,34 +55,33 @@
     .doctor-chip {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
     .doc-avatar {
-      width: 38px;
-      height: 38px;
+      width: 40px;
+      height: 40px;
       border-radius: 12px;
       background: linear-gradient(135deg, #0ea5e9, #0284c7);
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 800;
-      font-size: 1rem;
+      font-size: 1.1rem;
       color: #ffffff;
-      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35);
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.4);
     }
 
-    /* Live Search Bar */
+    /* Live Search Input */
     .mobile-search-box {
       margin-top: 10px;
       position: relative;
     }
     .mobile-search-input {
       width: 100%;
-      box-sizing: border-box;
-      background: #1e293b;
-      border: 1px solid #334155;
+      background: #152238;
+      border: 1px solid #253856;
       border-radius: 12px;
-      padding: 10px 14px 10px 38px;
+      padding: 11px 14px 11px 40px;
       color: #ffffff;
       font-size: 0.9rem;
       outline: none;
@@ -87,21 +94,49 @@
     }
     .search-icon {
       position: absolute;
-      left: 12px;
+      left: 14px;
       top: 50%;
       transform: translateY(-50%);
       color: #64748b;
-      font-size: 0.95rem;
+      font-size: 1rem;
     }
 
-    /* Quick Action 4-Grid */
-    .quick-grid {
+    /* KPI Quick Stats Ribbon */
+    .kpi-ribbon {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      padding: 16px;
+      gap: 8px;
+      padding: 14px 16px 4px;
     }
-    .quick-btn {
+    .kpi-pill {
+      background: var(--mobile-card);
+      border: 1px solid var(--mobile-border);
+      border-radius: 12px;
+      padding: 10px 6px;
+      text-align: center;
+    }
+    .kpi-value {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.1;
+    }
+    .kpi-label {
+      font-size: 0.65rem;
+      color: #94a3b8;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* 6-Action Thumb Grid */
+    .action-matrix {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 14px 16px;
+    }
+    .action-card {
       background: var(--mobile-card);
       border: 1px solid var(--mobile-border);
       border-radius: 16px;
@@ -112,31 +147,31 @@
       justify-content: center;
       text-decoration: none;
       color: #ffffff;
-      transition: all 0.15s ease;
       cursor: pointer;
+      transition: all 0.15s ease;
     }
-    .quick-btn:active {
+    .action-card:active {
       transform: scale(0.96);
-      background: #1e2c44;
+      background: var(--mobile-card-hover);
     }
-    .quick-btn-icon {
+    .action-icon {
       width: 44px;
       height: 44px;
       border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.3rem;
+      font-size: 1.35rem;
       margin-bottom: 8px;
     }
-    .quick-btn-label {
+    .action-name {
       font-size: 0.75rem;
       font-weight: 700;
       color: #e2e8f0;
       text-align: center;
     }
 
-    /* Section Container */
+    /* Section Styling */
     .section-wrap {
       padding: 0 16px 20px;
     }
@@ -152,7 +187,7 @@
       align-items: center;
     }
 
-    /* Chair Queue Swipe Cards */
+    /* Chair Carousel */
     .chair-carousel {
       display: flex;
       gap: 12px;
@@ -165,24 +200,24 @@
       display: none;
     }
     .chair-card {
-      min-width: 260px;
-      max-width: 280px;
+      min-width: 270px;
+      max-width: 290px;
       flex-shrink: 0;
       background: var(--mobile-card);
-      border: 1px solid var(--mobile-border);
-      border-radius: 18px;
+      border: 1.5px solid var(--mobile-border);
+      border-radius: 20px;
       padding: 16px;
       position: relative;
     }
     .chair-card.active-busy {
       border-color: #0284c7;
-      background: linear-gradient(180deg, #132238 0%, #101c2e 100%);
+      background: linear-gradient(180deg, #15273f 0%, #101c2e 100%);
     }
     .chair-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     .chair-pill {
       font-size: 0.72rem;
@@ -197,8 +232,8 @@
       color: #ffffff;
     }
 
-    /* Patient Row Item */
-    .patient-row {
+    /* Row Card */
+    .row-card {
       background: var(--mobile-card);
       border: 1px solid var(--mobile-border);
       border-radius: 14px;
@@ -209,8 +244,30 @@
       justify-content: space-between;
       transition: background 0.15s;
     }
-    .patient-row:active {
-      background: #1e2b42;
+    .row-card:active {
+      background: var(--mobile-card-hover);
+    }
+
+    /* Odontogram Teeth Grid */
+    .teeth-arch {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .tooth-btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 8px 2px;
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #ffffff;
+      cursor: pointer;
+    }
+    .tooth-btn:active {
+      background: var(--mobile-accent);
     }
 
     /* Native Bottom Dock */
@@ -219,13 +276,13 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background: rgba(15, 23, 42, 0.96);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      background: rgba(9, 14, 23, 0.97);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
       border-top: 1px solid var(--mobile-border);
       display: flex;
       justify-content: space-around;
-      padding: 8px 0 12px;
+      padding: 10px 0 14px;
       z-index: 200;
     }
     .dock-tab {
@@ -237,14 +294,14 @@
       font-size: 0.68rem;
       font-weight: 600;
       gap: 3px;
-      transition: color 0.15s;
       flex: 1;
+      cursor: pointer;
     }
-    .dock-tab.active, .dock-tab:hover {
+    .dock-tab.active {
       color: var(--mobile-accent);
     }
     .dock-tab-icon {
-      font-size: 1.25rem;
+      font-size: 1.3rem;
       line-height: 1;
     }
 
@@ -252,8 +309,8 @@
     .bottom-sheet {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(4px);
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
       z-index: 300;
       display: none;
       align-items: flex-end;
@@ -265,14 +322,14 @@
       width: 100%;
       background: #0f172a;
       border-top: 1px solid #334155;
-      border-radius: 24px 24px 0 0;
-      padding: 24px 20px 36px;
+      border-radius: 26px 26px 0 0;
+      padding: 24px 20px 38px;
       max-height: 85vh;
       overflow-y: auto;
-      box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
-      animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 -12px 48px rgba(0,0,0,0.7);
+      animation: sheetSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    @keyframes slideUp {
+    @keyframes sheetSlideUp {
       from { transform: translateY(100%); }
       to { transform: translateY(0); }
     }
@@ -293,16 +350,16 @@
           </div>
           <div style="font-size: 0.72rem; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
             <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#10b981;"></span>
-            RK Hospital • 4 Operatories
+            RK Hospital • Nagpur Road
           </div>
         </div>
       </div>
 
       <div style="display: flex; gap: 8px;">
-        <a href="{% url 'dashboard' %}" class="btn btn-secondary btn-sm" style="padding: 6px 10px; font-size: 0.75rem; background: #1e293b; border-color: #334155; color: #94a3b8;" title="Switch to Full Desktop View">
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 0.75rem; background: #1e293b; border-color: #334155; color: #94a3b8;" title="Full Desktop Web View">
           🖥️ Desktop
         </a>
-        <a href="{% url 'logout' %}" class="btn btn-secondary btn-sm" style="padding: 6px 10px; font-size: 0.75rem; background: #1e293b; border-color: #334155; color: #f87171;" title="Logout">
+        <a href="{% url 'logout' %}" class="btn btn-secondary btn-sm" style="padding: 6px 10px; font-size: 0.75rem; background: #1e293b; border-color: #334155; color: #f87171;" title="Secure Logout">
           ⏻
         </a>
       </div>
@@ -311,11 +368,31 @@
     <!-- Quick Live Filter -->
     <div class="mobile-search-box">
       <span class="search-icon">🔍</span>
-      <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="Search patient by name, phone, or MRN..." onkeyup="filterPatientRoster()">
+      <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="Search patient name, MRN, or phone..." onkeyup="filterPatientRoster()">
     </div>
   </header>
 
-  <!-- Feedback Flash Messages -->
+  <!-- Doctor Daily KPI Ribbon -->
+  <div class="kpi-ribbon">
+    <div class="kpi-pill">
+      <div class="kpi-value">{{ today_appointments.count }}</div>
+      <div class="kpi-label">Today OPD</div>
+    </div>
+    <div class="kpi-pill">
+      <div class="kpi-value" style="color: #38bdf8;">{{ total_patients_count }}</div>
+      <div class="kpi-label">Patients</div>
+    </div>
+    <div class="kpi-pill">
+      <div class="kpi-value" style="color: #fbbf24;">{{ pending_lab_count }}</div>
+      <div class="kpi-label">Lab Orders</div>
+    </div>
+    <div class="kpi-pill">
+      <div class="kpi-value" style="color: #34d399;">₹{{ today_revenue|floatformat:0 }}</div>
+      <div class="kpi-label">Collected</div>
+    </div>
+  </div>
+
+  <!-- Messages Flash -->
   {% if messages %}
   <div style="padding: 12px 16px 0;">
     {% for msg in messages %}
@@ -326,41 +403,43 @@
   </div>
   {% endif %}
 
-  <!-- Quick Action 4-Grid (Thumb Zone) -->
-  <div class="quick-grid">
-    <div class="quick-btn" onclick="openSheet('newPatientSheet')">
-      <div class="quick-btn-icon" style="background: rgba(14, 165, 233, 0.15); color: #38bdf8;">
-        👤+
-      </div>
-      <div class="quick-btn-label">New Patient</div>
+  <!-- 6-Action Thumb Grid -->
+  <div class="action-matrix">
+    <div class="action-card" onclick="haptic(); openSheet('newPatientSheet')">
+      <div class="action-icon" style="background: rgba(14, 165, 233, 0.15); color: #38bdf8;">👤+</div>
+      <div class="action-name">New Patient</div>
     </div>
 
-    <div class="quick-btn" onclick="openSheet('cameraXraySheet')">
-      <div class="quick-btn-icon" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">
-        📸
-      </div>
-      <div class="quick-btn-label">Camera X-Ray</div>
+    <div class="action-card" onclick="haptic(); openSheet('cameraXraySheet')">
+      <div class="action-icon" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">📸</div>
+      <div class="action-name">Camera X-Ray</div>
     </div>
 
-    <div class="quick-btn" onclick="openSheet('quickConsentSheet')">
-      <div class="quick-btn-icon" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">
-        ✍️
-      </div>
-      <div class="quick-btn-label">Touch Sign</div>
+    <div class="action-card" onclick="haptic(); openSheet('odontogramSheet')">
+      <div class="action-icon" style="background: rgba(139, 92, 246, 0.15); color: #a78bfa;">🦷</div>
+      <div class="action-name">32-Teeth Chart</div>
     </div>
 
-    <div class="quick-btn" onclick="openSheet('quickWhatsAppSheet')">
-      <div class="quick-btn-icon" style="background: rgba(34, 197, 94, 0.15); color: #4ade80;">
-        📲
-      </div>
-      <div class="quick-btn-label">WhatsApp</div>
+    <div class="action-card" onclick="haptic(); openSheet('quickConsentSheet')">
+      <div class="action-icon" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">✍️</div>
+      <div class="action-name">Touch Sign</div>
+    </div>
+
+    <div class="action-card" onclick="haptic(); openSheet('quickWhatsAppSheet')">
+      <div class="action-icon" style="background: rgba(34, 197, 94, 0.15); color: #4ade80;">📲</div>
+      <div class="action-name">WhatsApp</div>
+    </div>
+
+    <div class="action-card" onclick="haptic(); openSheet('quickBillingSheet')">
+      <div class="action-icon" style="background: rgba(236, 72, 153, 0.15); color: #f472b6;">💰</div>
+      <div class="action-name">Quick Bill</div>
     </div>
   </div>
 
-  <!-- SECTION 1: Operatory Chairs Live Status -->
-  <div class="section-wrap">
+  <!-- SECTION 1: Operatory Chairs Queue -->
+  <div class="section-wrap" id="chairsSection">
     <div class="section-title">
-      <span>💺 Operatory Chairs Queue</span>
+      <span>💺 Operatory Chairs Live (4 Active)</span>
       <span style="font-size: 0.72rem; color: #38bdf8;">Swipe ➔</span>
     </div>
 
@@ -368,13 +447,13 @@
       {% for item in chair_status %}
       <div class="chair-card {% if item.active_appointment %}active-busy{% endif %}">
         <div class="chair-header">
-          <div style="font-weight: 800; font-size: 0.88rem; color: #ffffff;">
+          <div style="font-weight: 800; font-size: 0.9rem; color: #ffffff;">
             Chair {{ item.operatory.chair_number }}
           </div>
           {% if item.active_appointment %}
             <span class="chair-pill busy">{{ item.active_appointment.get_status_display }}</span>
           {% else %}
-            <span class="chair-pill">Available</span>
+            <span class="chair-pill">Empty / Ready</span>
           {% endif %}
         </div>
 
@@ -383,34 +462,34 @@
         </div>
 
         {% if item.active_appointment %}
-          <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.25); border-radius: 12px;">
-            <div style="font-weight: 700; font-size: 0.92rem; color: #ffffff;">
+          <div style="margin-top: 10px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 14px;">
+            <div style="font-weight: 700; font-size: 0.95rem; color: #ffffff;">
               <a href="{% url 'patient_detail' item.active_appointment.patient.id %}" style="color: #38bdf8; text-decoration: none;">
                 {{ item.active_appointment.patient.full_name }}
               </a>
             </div>
             <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 2px;">
-              ⏰ {{ item.active_appointment.start_time|time:"H:i" }} • {{ item.active_appointment.reason|truncatechars:24 }}
+              ⏰ {{ item.active_appointment.start_time|time:"H:i" }} • {{ item.active_appointment.reason }}
             </div>
 
-            <!-- Quick Action Row -->
-            <div style="display: flex; gap: 6px; margin-top: 8px;">
+            <!-- Quick Action Buttons -->
+            <div style="display: flex; gap: 6px; margin-top: 10px;">
               {% if item.active_appointment.patient.phone %}
-                <a href="tel:{{ item.active_appointment.patient.phone }}" class="btn btn-secondary btn-sm" style="flex: 1; padding: 4px; font-size: 0.72rem; justify-content: center; background: #1e293b; border-color: #334155;">
+                <a href="tel:{{ item.active_appointment.patient.phone }}" class="btn btn-secondary btn-sm" style="flex: 1; padding: 6px; font-size: 0.75rem; justify-content: center; background: #1e293b; border-color: #334155;">
                   📞 Call
                 </a>
-                <a href="{% url 'whatsapp_send' item.active_appointment.patient.id %}?type=APPT_REMINDER" target="_blank" class="btn btn-secondary btn-sm" style="flex: 1; padding: 4px; font-size: 0.72rem; justify-content: center; background: #064e3b; border-color: #047857; color: #34d399;">
+                <a href="{% url 'whatsapp_send' item.active_appointment.patient.id %}?type=APPT_REMINDER" target="_blank" class="btn btn-secondary btn-sm" style="flex: 1; padding: 6px; font-size: 0.75rem; justify-content: center; background: #064e3b; border-color: #047857; color: #34d399;">
                   📲 WA
                 </a>
               {% endif %}
-              <a href="{% url 'patient_detail' item.active_appointment.patient.id %}?tab=chart" class="btn btn-primary btn-sm" style="flex: 1; padding: 4px; font-size: 0.72rem; justify-content: center;">
+              <a href="{% url 'patient_detail' item.active_appointment.patient.id %}?tab=chart" class="btn btn-primary btn-sm" style="flex: 1; padding: 6px; font-size: 0.75rem; justify-content: center;">
                 🦷 Chart
               </a>
             </div>
           </div>
         {% else %}
-          <div style="padding: 16px 0; text-align: center; color: #64748b; font-size: 0.78rem;">
-            Operatory is clean & ready for next patient.
+          <div style="padding: 20px 0; text-align: center; color: #64748b; font-size: 0.78rem;">
+            Sterilized & ready for next patient.
           </div>
         {% endif %}
       </div>
@@ -421,12 +500,12 @@
   <!-- SECTION 2: Today's Clinical Schedule -->
   <div class="section-wrap">
     <div class="section-title">
-      <span>📅 Today's Appointments ({{ today_appointments.count }})</span>
-      <span style="font-size: 0.75rem; color: #64748b;">{{ today|date:"M d, Y" }}</span>
+      <span>📅 Today's OPD Schedule ({{ today_appointments.count }})</span>
+      <span style="font-size: 0.75rem; color: #64748b;">{{ today|date:"D, M d" }}</span>
     </div>
 
     {% for appt in today_appointments %}
-    <div class="patient-row">
+    <div class="row-card">
       <div>
         <div style="font-weight: 700; font-size: 0.92rem; color: #ffffff;">
           <a href="{% url 'patient_detail' appt.patient.id %}" style="color: #ffffff; text-decoration: none;">
@@ -434,26 +513,52 @@
           </a>
         </div>
         <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 2px;">
-          ⏰ {{ appt.start_time|time:"H:i" }} • Chair {{ appt.chair.chair_number|default:"-" }} • {{ appt.reason|truncatechars:20 }}
+          ⏰ {{ appt.start_time|time:"H:i" }} • Chair {{ appt.chair.chair_number|default:"-" }} • {{ appt.reason }}
         </div>
       </div>
       <div style="display: flex; align-items: center; gap: 6px;">
-        <a href="{% url 'whatsapp_send' appt.patient.id %}?type=APPT_CONFIRM" target="_blank" class="btn btn-secondary btn-sm" style="padding: 4px 8px; font-size: 0.7rem; color: #34d399; background: #064e3b; border-color: #047857;">
+        <a href="{% url 'whatsapp_send' appt.patient.id %}?type=APPT_CONFIRM" target="_blank" class="btn btn-secondary btn-sm" style="padding: 4px 8px; font-size: 0.72rem; color: #34d399; background: #064e3b; border-color: #047857;">
           📲 WA
         </a>
-        <a href="{% url 'patient_detail' appt.patient.id %}?tab=chart" class="btn btn-secondary btn-sm" style="padding: 4px 8px; font-size: 0.7rem; background: #1e293b; border-color: #334155; color: #38bdf8;">
+        <a href="{% url 'patient_detail' appt.patient.id %}?tab=chart" class="btn btn-secondary btn-sm" style="padding: 4px 8px; font-size: 0.72rem; background: #1e293b; border-color: #334155; color: #38bdf8;">
           Chart
         </a>
       </div>
     </div>
     {% empty %}
-    <div style="background: var(--mobile-card); border: 1px dashed var(--mobile-border); border-radius: 14px; padding: 20px; text-align: center; color: #64748b; font-size: 0.82rem;">
-      No bookings scheduled for today yet. Tap <b>"👤+ New Patient"</b> to book.
+    <div style="background: var(--mobile-card); border: 1px dashed var(--mobile-border); border-radius: 14px; padding: 22px; text-align: center; color: #64748b; font-size: 0.82rem;">
+      No appointments scheduled for today yet. Tap <b>"👤+ New Patient"</b> to book.
     </div>
     {% endfor %}
   </div>
 
-  <!-- SECTION 3: Patients Directory (Live Filterable) -->
+  <!-- SECTION 3: Dental Lab Prosthetics Tracking -->
+  {% if active_lab_orders %}
+  <div class="section-wrap">
+    <div class="section-title">
+      <span>🔬 Active Dental Lab Prosthetics ({{ active_lab_orders.count }})</span>
+      <span style="font-size: 0.72rem; color: #fbbf24;">In Progress</span>
+    </div>
+
+    {% for order in active_lab_orders %}
+    <div class="row-card">
+      <div>
+        <div style="font-weight: 700; font-size: 0.9rem; color: #ffffff;">
+          {{ order.prosthesis_type }} (Tooth: <b>{{ order.teeth_numbers }}</b>)
+        </div>
+        <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 2px;">
+          Patient: <b>{{ order.patient.full_name }}</b> • Lab: {{ order.lab_name }}
+        </div>
+      </div>
+      <span class="badge" style="background: #78350f; color: #fde68a; font-size: 0.72rem;">
+        {{ order.get_status_display }}
+      </span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- SECTION 4: Patient Roster Directory -->
   <div class="section-wrap" id="patientsSection">
     <div class="section-title">
       <span>👥 Hospital Patient Roster ({{ all_patients.count }})</span>
@@ -462,18 +567,18 @@
 
     <div id="patientRosterList">
       {% for p in all_patients %}
-      <div class="patient-row roster-item" data-name="{{ p.full_name|lower }}" data-mrn="{{ p.mrn|lower }}" data-phone="{{ p.phone|default:'' }}">
+      <div class="row-card roster-item" data-name="{{ p.full_name|lower }}" data-mrn="{{ p.mrn|lower }}" data-phone="{{ p.phone|default:'' }}">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <div style="width: 34px; height: 34px; border-radius: 10px; background: #1e293b; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; color: #38bdf8;">
+          <div style="width: 36px; height: 36px; border-radius: 10px; background: #1e293b; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: #38bdf8;">
             {{ p.first_name|make_list|first }}{{ p.last_name|make_list|first }}
           </div>
           <div>
-            <div style="font-weight: 700; font-size: 0.9rem; color: #ffffff;">
+            <div style="font-weight: 700; font-size: 0.92rem; color: #ffffff;">
               <a href="{% url 'patient_detail' p.id %}" style="color: #ffffff; text-decoration: none;">
                 {{ p.full_name }}
               </a>
             </div>
-            <div style="font-size: 0.72rem; color: #94a3b8;">
+            <div style="font-size: 0.75rem; color: #94a3b8;">
               MRN: <b>{{ p.mrn }}</b> • 📞 {{ p.phone|default:"No phone" }}
             </div>
           </div>
@@ -481,49 +586,49 @@
 
         <div style="display: flex; gap: 6px;">
           {% if p.phone %}
-            <a href="tel:{{ p.phone }}" class="btn btn-secondary btn-sm" style="padding: 4px 8px; font-size: 0.72rem; background: #1e293b; border-color: #334155;">
+            <a href="tel:{{ p.phone }}" class="btn btn-secondary btn-sm" style="padding: 6px 10px; font-size: 0.75rem; background: #1e293b; border-color: #334155;">
               📞
             </a>
           {% endif %}
-          <a href="{% url 'patient_detail' p.id %}" class="btn btn-secondary btn-sm" style="padding: 4px 10px; font-size: 0.72rem; background: #0284c7; border-color: #0284c7; color: #ffffff;">
-            Open EMR
+          <a href="{% url 'patient_detail' p.id %}" class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 0.75rem; background: #0284c7; border-color: #0284c7; color: #ffffff;">
+            EMR
           </a>
         </div>
       </div>
       {% empty %}
-      <div style="background: var(--mobile-card); border: 1px dashed var(--mobile-border); border-radius: 14px; padding: 24px; text-align: center; color: #64748b; font-size: 0.82rem;">
-        No patients in database yet. Add your first patient using the button above.
+      <div style="background: var(--mobile-card); border: 1px dashed var(--mobile-border); border-radius: 14px; padding: 26px; text-align: center; color: #64748b; font-size: 0.85rem;">
+        No patients in database yet. Tap <b>"👤+ New Patient"</b> to register.
       </div>
       {% endfor %}
     </div>
   </div>
 
-  <!-- Native Bottom Dock Navigation -->
+  <!-- Native Bottom Dock -->
   <nav class="mobile-bottom-dock">
-    <a href="{% url 'mobile_companion' %}" class="dock-tab active">
+    <div class="dock-tab active" onclick="haptic(); scrollSection('chairsSection')">
       <span class="dock-tab-icon">💺</span>
       <span>Chairs</span>
-    </a>
-    <a href="#patientsSection" class="dock-tab" onclick="document.getElementById('mobileSearchInput').focus()">
-      <span class="dock-tab-icon">👥</span>
-      <span>Patients</span>
-    </a>
-    <a href="javascript:void(0)" class="dock-tab" onclick="openSheet('cameraXraySheet')">
+    </div>
+    <div class="dock-tab" onclick="haptic(); openSheet('odontogramSheet')">
+      <span class="dock-tab-icon" style="color: #a78bfa;">🦷</span>
+      <span style="color: #a78bfa;">Teeth</span>
+    </div>
+    <div class="dock-tab" onclick="haptic(); openSheet('cameraXraySheet')">
       <span class="dock-tab-icon" style="color: #34d399;">📸</span>
       <span style="color: #34d399;">X-Ray</span>
-    </a>
-    <a href="javascript:void(0)" class="dock-tab" onclick="openSheet('quickConsentSheet')">
-      <span class="dock-tab-icon" style="color: #fbbf24;">✍️</span>
-      <span style="color: #fbbf24;">Consent</span>
-    </a>
-    <a href="{% url 'billing_list' %}" class="dock-tab">
-      <span class="dock-tab-icon">💰</span>
-      <span>Billing</span>
-    </a>
+    </div>
+    <div class="dock-tab" onclick="haptic(); scrollSection('patientsSection')">
+      <span class="dock-tab-icon">👥</span>
+      <span>Patients</span>
+    </div>
+    <div class="dock-tab" onclick="haptic(); openSheet('quickBillingSheet')">
+      <span class="dock-tab-icon" style="color: #f472b6;">💰</span>
+      <span style="color: #f472b6;">Billing</span>
+    </div>
   </nav>
 
   <!-- ==============================================
-       BOTTOM SHEETS (MOBILE MODALS)
+       BOTTOM SHEETS (MODALS)
        ============================================== -->
 
   <!-- SHEET 1: Direct Camera X-Ray / Photo Capture -->
@@ -531,7 +636,7 @@
     <div class="sheet-card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 style="font-size: 1.15rem; font-weight: 800; color: #ffffff; margin: 0;">
-          📸 Direct Camera X-Ray & Photo Capture
+          📸 Camera Dental Radiograph / Photo
         </h3>
         <button onclick="closeSheets()" style="background:none; border:none; color:#94a3b8; font-size:1.4rem;">✕</button>
       </div>
@@ -550,14 +655,13 @@
         </div>
 
         <div class="form-group" style="margin-bottom: 14px;">
-          <label class="form-label" style="color: #cbd5e1;">Snap Photo or Choose File *</label>
-          <!-- Using capture="environment" to directly activate Android back camera -->
+          <label class="form-label" style="color: #cbd5e1;">Camera Photo or Gallery *</label>
           <input type="file" name="image" class="form-input" accept="image/*" capture="environment" required style="background: #1e293b; color: #ffffff; border-color: #334155; padding: 10px;">
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
           <div class="form-group">
-            <label class="form-label" style="color: #cbd5e1;">Image Type</label>
+            <label class="form-label" style="color: #cbd5e1;">Image Category</label>
             <select name="image_type" class="form-select" style="background: #1e293b; color: #ffffff; border-color: #334155;">
               <option value="IOPA">IOPA X-Ray</option>
               <option value="INTRAORAL_PHOTO" selected>Intraoral Photo</option>
@@ -573,11 +677,11 @@
 
         <div class="form-group" style="margin-bottom: 20px;">
           <label class="form-label" style="color: #cbd5e1;">Clinical Findings Note</label>
-          <input type="text" name="clinical_notes" class="form-input" placeholder="e.g. Pre-op periapical radiolucency" style="background: #1e293b; color: #ffffff; border-color: #334155;">
+          <input type="text" name="clinical_notes" class="form-input" placeholder="e.g. Periapical radiolucency lower molar" style="background: #1e293b; color: #ffffff; border-color: #334155;">
         </div>
 
         <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 1rem; font-weight: 700; justify-content: center; background: #059669; border-color: #059669;">
-          📸 Upload & Attach to EMR
+          📸 Save & Attach to EMR
         </button>
       </form>
     </div>
@@ -633,22 +737,76 @@
     </div>
   </div>
 
-  <!-- SHEET 3: Quick Select Patient for Consent -->
+  <!-- SHEET 3: Mobile 32-Tooth Odontogram Grid -->
+  <div id="odontogramSheet" class="bottom-sheet" onclick="if(event.target===this)closeSheets()">
+    <div class="sheet-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="font-size: 1.15rem; font-weight: 800; color: #ffffff; margin: 0;">
+          🦷 32-Tooth Mobile Odontogram
+        </h3>
+        <button onclick="closeSheets()" style="background:none; border:none; color:#94a3b8; font-size:1.4rem;">✕</button>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label class="form-label" style="color: #cbd5e1;">Select Patient to Inspect Chart:</label>
+        <select id="odoPatientSelect" class="form-select" onchange="loadPatientOdontogramLink(this.value)" style="background: #1e293b; color: #ffffff; border-color: #334155;">
+          <option value="" disabled selected>Select patient...</option>
+          {% for p in all_patients %}
+            <option value="{{ p.id }}">{{ p.full_name }} ({{ p.mrn }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Maxillary Arch (Upper) -->
+      <div style="font-size: 0.72rem; color: #38bdf8; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Upper Right (Q1) ➔ Upper Left (Q2)</div>
+      <div class="teeth-arch">
+        <button type="button" class="tooth-btn" onclick="openToothDetail(18)">18</button>
+        <button type="button" class="tooth-btn" onclick="openToothDetail(17)">17</button>
+        <button type="button" class="tooth-btn" onclick="openToothDetail(16)">16</button>
+        <button type="button" class="tooth-btn" onclick="openToothDetail(15)">15</button>
+        <button type="button" class="tooth-btn" onclick="openToothDetail(21)">21</button>
+        <button type="button" class="tooth-btn" onclick="openToothDetail(22)">22</button>
+        <button type="button" class="tooth-btn" onclick="openToothDetail(23)">23</button>
+        <button type="button" class="tooth-btn" onclick="openToothDetail(24)">24</button>
+      </div>
+
+      <!-- Mandibular Arch (Lower) -->
+      <div style="font-size: 0.72rem; color: #38bdf8; font-weight: 700; text-transform: uppercase; margin: 8px 0 4px;">Lower Right (Q4) ➔ Lower Left (Q3)</div>
+      <div class="teeth-arch">
+        <button type="button" class="tooth-btn" onclick="openToothDetail(48)">48</button>
+        <button type="button" class="tooth-btn" onclick="openToothDetail(47)">47</button>
+        <button type="button" class="tooth-btn" onclick="openToothDetail(46)">46</button>
+        <button type="button" class="tooth-btn" onclick="openToothDetail(45)">45</button>
+        <button type="button" class="tooth-btn" onclick="openToothDetail(31)">31</button>
+        <button type="button" class="tooth-btn" onclick="openToothDetail(32)">32</button>
+        <button type="button" class="tooth-btn" onclick="openToothDetail(36)">36</button>
+        <button type="button" class="tooth-btn" onclick="openToothDetail(37)">37</button>
+      </div>
+
+      <div style="margin-top: 14px;">
+        <a id="btnOpenFullChart" href="javascript:alert('Please select a patient first')" class="btn btn-primary btn-sm" style="width: 100%; justify-content: center; padding: 12px; font-weight: 700;">
+          Open Patient's 3D Odontogram Studio →
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHEET 4: Quick Select Patient for Consent -->
   <div id="quickConsentSheet" class="bottom-sheet" onclick="if(event.target===this)closeSheets()">
     <div class="sheet-card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
         <h3 style="font-size: 1.15rem; font-weight: 800; color: #ffffff; margin: 0;">
           ✍️ Select Patient for Touch Consent
         </h3>
         <button onclick="closeSheets()" style="background:none; border:none; color:#94a3b8; font-size:1.4rem;">✕</button>
       </div>
       <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 14px;">
-        Pick patient to open the touchscreen signature pad for Implants, RCT, or Extraction:
+        Pick patient to open informed consent touch signature pad for Implants, RCT, or Extraction:
       </p>
 
       <div style="max-height: 280px; overflow-y: auto;">
         {% for p in all_patients %}
-        <a href="{% url 'consent_create' p.id %}" class="patient-row" style="text-decoration: none;">
+        <a href="{% url 'consent_create' p.id %}" class="row-card" style="text-decoration: none;">
           <div>
             <div style="font-weight: 700; color: #ffffff;">{{ p.full_name }}</div>
             <div style="font-size: 0.72rem; color: #94a3b8;">MRN: {{ p.mrn }}</div>
@@ -664,10 +822,10 @@
     </div>
   </div>
 
-  <!-- SHEET 4: Quick Select Patient for WhatsApp -->
+  <!-- SHEET 5: Quick Select Patient for WhatsApp -->
   <div id="quickWhatsAppSheet" class="bottom-sheet" onclick="if(event.target===this)closeSheets()">
     <div class="sheet-card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
         <h3 style="font-size: 1.15rem; font-weight: 800; color: #ffffff; margin: 0;">
           📲 Quick WhatsApp Dispatch
         </h3>
@@ -679,7 +837,7 @@
 
       <div style="max-height: 280px; overflow-y: auto;">
         {% for p in all_patients %}
-        <a href="{% url 'patient_detail' p.id %}?tab=whatsapp" class="patient-row" style="text-decoration: none;">
+        <a href="{% url 'patient_detail' p.id %}?tab=whatsapp" class="row-card" style="text-decoration: none;">
           <div>
             <div style="font-weight: 700; color: #ffffff;">{{ p.full_name }}</div>
             <div style="font-size: 0.72rem; color: #94a3b8;">📞 {{ p.phone|default:"No phone" }}</div>
@@ -695,8 +853,45 @@
     </div>
   </div>
 
-  <!-- Script for Mobile Sheets & Live Filter -->
+  <!-- SHEET 6: Quick Invoice & Payment Collection -->
+  <div id="quickBillingSheet" class="bottom-sheet" onclick="if(event.target===this)closeSheets()">
+    <div class="sheet-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="font-size: 1.15rem; font-weight: 800; color: #ffffff; margin: 0;">
+          💰 Quick Bill & Payment
+        </h3>
+        <button onclick="closeSheets()" style="background:none; border:none; color:#94a3b8; font-size:1.4rem;">✕</button>
+      </div>
+      <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 14px;">
+        Select patient to create an instant invoice or record cash/UPI payment:
+      </p>
+
+      <div style="max-height: 280px; overflow-y: auto;">
+        {% for p in all_patients %}
+        <a href="{% url 'invoice_create' p.id %}" class="row-card" style="text-decoration: none;">
+          <div>
+            <div style="font-weight: 700; color: #ffffff;">{{ p.full_name }}</div>
+            <div style="font-size: 0.72rem; color: #94a3b8;">MRN: {{ p.mrn }}</div>
+          </div>
+          <span style="font-size: 0.8rem; color: #f472b6;">+ Create Bill →</span>
+        </a>
+        {% empty %}
+        <div style="color: #64748b; font-size: 0.82rem; text-align: center; padding: 20px;">
+          No patients yet. Register a patient first.
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Client-Side Scripts -->
   <script>
+    function haptic() {
+      if (navigator.vibrate) {
+        navigator.vibrate(12);
+      }
+    }
+
     function openSheet(id) {
       document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('active'));
       const sheet = document.getElementById(id);
@@ -705,6 +900,11 @@
 
     function closeSheets() {
       document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('active'));
+    }
+
+    function scrollSection(id) {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
     }
 
     function filterPatientRoster() {
@@ -722,7 +922,24 @@
       });
     }
 
-    // Register service worker if available
+    function loadPatientOdontogramLink(patientId) {
+      const btn = document.getElementById('btnOpenFullChart');
+      if (btn && patientId) {
+        btn.href = '/patients/' + patientId + '/?tab=chart';
+      }
+    }
+
+    function openToothDetail(toothNum) {
+      haptic();
+      const patientId = document.getElementById('odoPatientSelect').value;
+      if (!patientId) {
+        alert('Please select a patient first from the dropdown above to view or update Tooth #' + toothNum);
+        return;
+      }
+      window.location.href = '/patients/' + patientId + '/?tab=chart';
+    }
+
+    // Register PWA Service Worker for offline performance
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/static/js/sw.js');
     }

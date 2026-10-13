@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RK Dental</string>
+    <string name="hospital_full_name">RK Hospital Bawaskar</string>
+    <string name="tagline">Centre of Dental Excellence</string>
+    <string name="offline_title">Hospital Network Offline</string>
+    <string name="offline_message">Cannot reach hospital cloud server. Please check your Wi-Fi or Mobile Data connection.</string>
+    <string name="btn_retry">Retry Connection</string>
+</resources>

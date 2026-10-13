@@ -1217,6 +1217,9 @@ def mobile_companion_view(request):
     # Form for quick patient registration modal
     patient_form = PatientForm()
     dentists = User.objects.filter(role__in=['DENTIST', 'ADMIN'])
+    procedures = ProcedureCatalog.objects.filter(is_active=True).order_by('category', 'name')
+    active_lab_orders = DentalLabOrder.objects.exclude(status='FITTED_OK').select_related('patient', 'dentist').order_by('-order_date')[:10]
+    recent_invoices = Invoice.objects.all().select_related('patient').order_by('-invoice_date')[:10]
 
     context = {
         'today': today,
@@ -1230,6 +1233,9 @@ def mobile_companion_view(request):
         'patient_form': patient_form,
         'dentists': dentists,
         'operatories': operatories,
+        'procedures': procedures,
+        'active_lab_orders': active_lab_orders,
+        'recent_invoices': recent_invoices,
     }
     return render(request, 'mobile/mobile_dashboard.html', context)
 
