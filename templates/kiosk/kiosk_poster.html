@@ -1,0 +1,210 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OPD QR Poster • RK Hospital Bawaskar</title>
+  <link rel="stylesheet" href="{% static 'css/hospital_theme.css' %}">
+  <style>
+    body {
+      background: #f1f5f9;
+      margin: 0;
+      padding: 30px;
+      font-family: var(--font-sans);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .poster-container {
+      width: 210mm;
+      min-height: 297mm;
+      background: #ffffff;
+      padding: 24mm 20mm;
+      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
+      border-radius: 12px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      border: 8px solid #0284c7;
+    }
+    .poster-header {
+      text-align: center;
+      border-bottom: 3px double #e2e8f0;
+      padding-bottom: 20px;
+    }
+    .hospital-title {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #0369a1;
+      letter-spacing: -0.02em;
+      margin: 8px 0 4px;
+    }
+    .tagline {
+      font-size: 1rem;
+      color: #475569;
+      font-weight: 600;
+    }
+    .qr-hero-section {
+      background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+      border: 3px solid #38bdf8;
+      border-radius: 20px;
+      padding: 24px;
+      text-align: center;
+      margin: 24px 0;
+    }
+    .qr-frame {
+      display: inline-block;
+      padding: 16px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      border: 2px solid #bae6fd;
+    }
+    .steps-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin: 20px 0;
+    }
+    .step-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px 12px;
+      text-align: center;
+    }
+    .step-badge {
+      width: 32px;
+      height: 32px;
+      background: #0284c7;
+      color: #ffffff;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+    }
+    .no-print-bar {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 12px;
+    }
+    @media print {
+      body {
+        padding: 0;
+        background: transparent;
+      }
+      .no-print-bar {
+        display: none !important;
+      }
+      .poster-container {
+        box-shadow: none;
+        border: 4px solid #0284c7;
+        width: 100%;
+        min-height: 100vh;
+        border-radius: 0;
+        page-break-after: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="no-print-bar">
+  <button onclick="window.print()" class="btn btn-primary" style="padding: 12px 24px; font-weight: 700; font-size: 1rem; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);">
+    🖨️ Print Reception Poster (A4)
+  </button>
+  <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="padding: 12px 20px;">
+    ← Back to Dashboard
+  </a>
+</div>
+
+<div class="poster-container">
+  <!-- Poster Header -->
+  <div class="poster-header">
+    <div style="display: flex; justify-content: center; align-items: center; gap: 12px;">
+      <div style="width: 48px; height: 48px; background: #0284c7; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white;">
+        <svg style="width: 30px; height: 30px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2C8.5 2 6 4.5 6 8c0 3.5 1.5 6.5 2 10 .5 3 2 4 4 4s3.5-1 4-4c.5-3.5 2-6.5 2-10 0-3.5-2.5-6-6-6z"/>
+          <path d="M10 8c.5 1 1.5 1.5 2 1.5s1.5-.5 2-1.5"/>
+        </svg>
+      </div>
+      <div style="text-align: left;">
+        <div style="font-size: 0.8rem; font-weight: 800; color: #0284c7; letter-spacing: 0.1em; text-transform: uppercase;">Centre of Excellence & Research</div>
+        <div style="font-size: 1.1rem; font-weight: 800; color: #0f172a;">BAWASKAR DENTAL INSTITUTE</div>
+      </div>
+    </div>
+
+    <div class="hospital-title">RK HOSPITAL BAWASKAR</div>
+    <div class="tagline">Multi-Speciality Hospital & Advanced Dental Operatories • Nagpur Road</div>
+  </div>
+
+  <!-- QR Hero Section -->
+  <div class="qr-hero-section">
+    <span style="background: #0284c7; color: #ffffff; padding: 6px 18px; border-radius: 30px; font-weight: 800; font-size: 0.9rem; letter-spacing: 0.05em; display: inline-block; margin-bottom: 12px;">
+      ⚡ FAST-TRACK OPD SELF REGISTRATION
+    </span>
+    <h2 style="font-size: 1.5rem; color: #0f172a; margin: 4px 0 16px; font-weight: 800;">
+      Skip the Front Desk Queue!
+    </h2>
+
+    <div class="qr-frame">
+      <img src="{{ qr_api_url }}" alt="Scan for OPD Check-in" style="width: 240px; height: 240px; display: block;">
+    </div>
+
+    <div style="margin-top: 14px; font-size: 0.95rem; font-weight: 700; color: #0369a1;">
+      Scan with Google Lens / iPhone Camera / Any Scanner
+    </div>
+    <div style="font-size: 0.82rem; color: #64748b; margin-top: 4px;">
+      Direct Portal: <span style="font-family: monospace; font-weight: 600;">{{ checkin_url }}</span>
+    </div>
+  </div>
+
+  <!-- 3 Steps -->
+  <div>
+    <div style="text-align: center; font-size: 0.85rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px;">
+      How It Works In 3 Easy Steps
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-badge">1</div>
+        <div style="font-weight: 800; font-size: 0.9rem; color: #0f172a; margin-bottom: 4px;">Point Camera</div>
+        <div style="font-size: 0.75rem; color: #64748b; line-height: 1.4;">
+          Point your smartphone camera at the QR code above and open the link.
+        </div>
+      </div>
+      <div class="step-card">
+        <div class="step-badge">2</div>
+        <div style="font-weight: 800; font-size: 0.9rem; color: #0f172a; margin-bottom: 4px;">Enter Details</div>
+        <div style="font-size: 0.75rem; color: #64748b; line-height: 1.4;">
+          Type your name, phone number, and primary dental complaint in 30 seconds.
+        </div>
+      </div>
+      <div class="step-card">
+        <div class="step-badge">3</div>
+        <div style="font-weight: 800; font-size: 0.9rem; color: #0f172a; margin-bottom: 4px;">Take a Seat</div>
+        <div style="font-size: 0.75rem; color: #64748b; line-height: 1.4;">
+          You are now entered into our OPD live queue. The doctor will call your name!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="border-top: 2px solid #e2e8f0; padding-top: 14px; display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #64748b;">
+    <div>
+      <strong>Emergency & Appointments:</strong> +91 98765 43210 / 0712-2589000
+    </div>
+    <div>
+      Dental Implants • Aligners • Root Canals • Smile Design
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

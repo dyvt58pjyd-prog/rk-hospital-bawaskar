@@ -606,3 +606,35 @@ class WhatsAppNotification(models.Model):
     def __str__(self):
         return f"WhatsApp {self.get_message_type_display()} to {self.patient.full_name} ({self.created_at.strftime('%Y-%m-%d %H:%M')})"
 
+
+class SmileTransformation(models.Model):
+    CATEGORY_CHOICES = [
+        ('VENEERS', 'Ceramic / Composite Veneers'),
+        ('IMPLANT', 'Dental Implant Rehabilitation'),
+        ('ORTHODONTIC', 'Orthodontic Alignment / Clear Aligners'),
+        ('FULL_MOUTH', 'Full Mouth Oral Rehabilitation'),
+        ('WHITENING', 'Laser Teeth Whitening / Bleaching'),
+        ('CROWN_BRIDGE', 'Aesthetic Zirconia Crowns & Bridges'),
+        ('GINGIVOPLASTY', 'Laser Gingivectomy & Gum Contouring'),
+    ]
+
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='smile_transformations')
+    dentist = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='smile_cases')
+    title = models.CharField(max_length=200, help_text="e.g. Anterior Smile Design with 6 E-max Veneers")
+    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES, default='VENEERS')
+    pre_op_image = models.ImageField(upload_to='smile_transformations/pre_op/')
+    post_op_image = models.ImageField(upload_to='smile_transformations/post_op/')
+    teeth_involved = models.CharField(max_length=100, blank=True, null=True, help_text="e.g. #13 to #23")
+    shade_before = models.CharField(max_length=20, blank=True, null=True, help_text="e.g. A3.5")
+    shade_after = models.CharField(max_length=20, blank=True, null=True, help_text="e.g. BL2 / A1")
+    clinical_case_notes = models.TextField(blank=True, null=True)
+    completed_date = models.DateField(default=timezone.now)
+    is_featured = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-completed_date']
+
+    def __str__(self):
+        return f"{self.title} - {self.patient.full_name}"
+

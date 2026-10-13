@@ -66,4 +66,16 @@ urlpatterns = [
     # Android Mobile Companion App
     path('mobile/', views.mobile_companion_view, name='mobile_companion'),
     path('mobile/quick-radiograph/', views.mobile_quick_radiograph, name='mobile_quick_radiograph'),
+
+    # Cosmetic Dentistry: Before & After Smile Gallery
+    path('smile-gallery/', views.smile_gallery_list, name='smile_gallery'),
+    path('smile-gallery/new/', views.smile_transformation_create, name='smile_transformation_create'),
+    path('patients/<int:patient_id>/smile-gallery/new/', views.smile_transformation_create, name='patient_smile_transformation_create'),
+
+    # Executive Analytics & Financial Hub
+    path('analytics/', views.analytics_dashboard_view, name='analytics_dashboard'),
+
+    # OPD Kiosk & Patient Self Check-in
+    path('kiosk/', views.kiosk_self_checkin, name='kiosk_self_checkin'),
+    path('kiosk/poster/', views.kiosk_qr_poster, name='kiosk_qr_poster'),
 ]

@@ -16,12 +16,12 @@ from .models import (
     ClinicalVisit, ProcedureCatalog, TreatmentItem, DentalLabOrder,
     DentalRadiograph, Prescription, PrescriptionItem, Invoice,
     InvoiceItem, Payment, DentalMaterialInventory,
-    DentalConsentForm, WhatsAppNotification
+    DentalConsentForm, WhatsAppNotification, SmileTransformation
 )
 from .forms import (
     PatientForm, AppointmentForm, ClinicalVisitForm, TreatmentItemForm,
     DentalLabOrderForm, DentalRadiographForm, InventoryItemForm,
-    DentalConsentFormForm, WhatsAppMessageForm
+    DentalConsentFormForm, WhatsAppMessageForm, SmileTransformationForm
 )
 from .consent_templates import CONSENT_TEMPLATES
 
@@ -1218,7 +1218,7 @@ def mobile_companion_view(request):
     patient_form = PatientForm()
     dentists = User.objects.filter(role__in=['DENTIST', 'ADMIN'])
     procedures = ProcedureCatalog.objects.filter(is_active=True).order_by('category', 'name')
-    active_lab_orders = DentalLabOrder.objects.exclude(status='FITTED_OK').select_related('patient', 'dentist').order_by('-order_date')[:10]
+    active_lab_orders = DentalLabOrder.objects.exclude(status='FITTED_OK').select_related('patient', 'dentist').order_by('-sent_date')[:10]
     recent_invoices = Invoice.objects.all().select_related('patient').order_by('-invoice_date')[:10]
 
     context = {
@@ -1272,4 +1272,203 @@ def mobile_quick_radiograph(request):
         return redirect('mobile_companion')
 
     return redirect('mobile_companion')
+
+
+# ==========================================
+# BEFORE & AFTER SMILE TRANSFORMATION GALLERY
+# ==========================================
+
+@login_required
+def smile_gallery_list(request):
+    """
+    Cosmetic Dentistry & Aesthetic Transformation Showcase.
+    Interactive Before/After comparison gallery for Veneers, Implants, Ortho & Whitening.
+    """
+    category = request.GET.get('category')
+    cases = SmileTransformation.objects.select_related('patient', 'dentist')
+    if category:
+        cases = cases.filter(category=category)
+
+    categories = SmileTransformation.CATEGORY_CHOICES
+    all_patients = Patient.objects.all().order_by('first_name')
+    dentists = User.objects.filter(role__in=['DENTIST', 'ADMIN'])
+
+    return render(request, 'gallery/smile_gallery.html', {
+        'cases': cases,
+        'categories': categories,
+        'selected_category': category,
+        'all_patients': all_patients,
+        'dentists': dentists,
+    })
+
+
+@login_required
+def smile_transformation_create(request, patient_id=None):
+    patient = get_object_or_404(Patient, pk=patient_id) if patient_id else None
+    if request.method == 'POST':
+        form = SmileTransformationForm(request.POST, request.FILES)
+        if form.is_valid():
+            case = form.save(commit=False)
+            if not case.dentist:
+                case.dentist = request.user
+            case.save()
+            messages.success(request, f"✨ Smile Transformation case '{case.title}' added to clinical showcase!")
+            if patient:
+                return redirect(f"/patients/{patient.id}/?tab=gallery")
+            return redirect('smile_gallery')
+        else:
+            messages.error(request, "Failed to upload case. Please ensure both Pre-Op and Post-Op photos are provided.")
+    else:
+        initial = {}
+        if patient:
+            initial['patient'] = patient
+            initial['dentist'] = request.user
+        form = SmileTransformationForm(initial=initial)
+
+    return render(request, 'gallery/smile_case_form.html', {
+        'form': form,
+        'patient': patient,
+        'title': "Add Before & After Smile Transformation Case"
+    })
+
+
+# ==========================================
+# EXECUTIVE FINANCIAL & CLINICAL ANALYTICS
+# ==========================================
+
+@login_required
+def analytics_dashboard_view(request):
+    """
+    High-level hospital performance metrics:
+    Financial KPIs, procedure category breakdown, chair utilization, and doctor stats.
+    """
+    now = timezone.now()
+    this_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    # Financial Aggregates
+    all_invoices = Invoice.objects.all()
+    month_invoices = all_invoices.filter(invoice_date__gte=this_month_start)
+
+    total_revenue_life = all_invoices.aggregate(Sum('paid_amount'))['paid_amount__sum'] or Decimal('0.00')
+    total_billed_life = all_invoices.aggregate(Sum('net_payable'))['net_payable__sum'] or Decimal('0.00')
+    total_dues_life = all_invoices.aggregate(Sum('balance_amount'))['balance_amount__sum'] or Decimal('0.00')
+
+    month_revenue = month_invoices.aggregate(Sum('paid_amount'))['paid_amount__sum'] or Decimal('0.00')
+    month_billed = month_invoices.aggregate(Sum('net_payable'))['net_payable__sum'] or Decimal('0.00')
+
+    # Procedure Category Breakdown
+    proc_breakdown = (
+        TreatmentItem.objects.values('procedure__category')
+        .annotate(total_count=Count('id'), total_cost=Sum('cost'))
+        .order_by('-total_count')
+    )
+
+    # Operatory Chair Workload
+    chair_stats = (
+        Appointment.objects.values('chair__chair_number', 'chair__name')
+        .annotate(total_appts=Count('id'))
+        .order_by('chair__chair_number')
+    )
+
+    # Doctor Performance
+    doctor_stats = (
+        Appointment.objects.filter(dentist__role__in=['DENTIST', 'ADMIN'])
+        .values('dentist__first_name', 'dentist__last_name', 'dentist__specialization')
+        .annotate(appt_count=Count('id'))
+        .order_by('-appt_count')
+    )
+
+    # Inventory Warnings
+    low_stock = DentalMaterialInventory.objects.filter(current_stock__lte=F('reorder_threshold'))
+    
+    return render(request, 'analytics/analytics_dashboard.html', {
+        'total_revenue_life': total_revenue_life,
+        'total_billed_life': total_billed_life,
+        'total_dues_life': total_dues_life,
+        'month_revenue': month_revenue,
+        'month_billed': month_billed,
+        'proc_breakdown': proc_breakdown,
+        'chair_stats': chair_stats,
+        'doctor_stats': doctor_stats,
+        'low_stock_items': low_stock,
+        'total_patients': Patient.objects.count(),
+        'total_appointments': Appointment.objects.count(),
+    })
+
+
+# ==========================================
+# OPD KIOSK & QR SELF-CHECK-IN GATEWAY
+# ==========================================
+
+def kiosk_self_checkin(request):
+    """
+    Public self-registration gateway for reception tablet kiosk or QR-code scan on phone.
+    Enables walk-in patients to register themselves and automatically enter the OPD queue.
+    """
+    if request.method == 'POST':
+        fname = request.POST.get('first_name', '').strip()
+        lname = request.POST.get('last_name', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        gender = request.POST.get('gender', 'M')
+        dob = request.POST.get('date_of_birth') or None
+        complaint = request.POST.get('chief_complaint', '').strip()
+        
+        # Medical alerts checklist
+        has_diabetes = request.POST.get('has_diabetes') == '1'
+        has_hypertension = request.POST.get('has_hypertension') == '1'
+        has_cardiac = request.POST.get('has_cardiac') == '1'
+        has_allergies = request.POST.get('has_allergies') == '1'
+
+        if not fname or not lname or not phone:
+            messages.error(request, "Please enter your First Name, Last Name, and Mobile Number.")
+            return render(request, 'kiosk/kiosk_form.html')
+
+        # Generate unique MRN
+        seq = Patient.objects.count() + 1
+        mrn = f"RKH-{timezone.now().year}-{seq:04d}"
+
+        patient = Patient.objects.create(
+            mrn=mrn,
+            first_name=fname,
+            last_name=lname,
+            phone=phone,
+            gender=gender,
+            date_of_birth=dob,
+            has_diabetes=has_diabetes,
+            has_hypertension=has_hypertension,
+            has_cardiac_condition=has_cardiac,
+            has_allergies=has_allergies,
+            medical_history_notes=f"Walk-in Kiosk Registration: {complaint}"
+        )
+
+        # Automatically create today's OPD queue appointment
+        default_dentist = User.objects.filter(role__in=['DENTIST', 'ADMIN']).first()
+        default_chair = DentalOperatory.objects.first()
+        Appointment.objects.create(
+            patient=patient,
+            dentist=default_dentist,
+            chair=default_chair,
+            appointment_date=timezone.now().date(),
+            start_time=timezone.now().time(),
+            reason=complaint or 'Walk-in Dental Checkup',
+            status='CHECKED_IN'
+        )
+
+        return render(request, 'kiosk/kiosk_success.html', {
+            'patient': patient,
+            'complaint': complaint
+        })
+
+    return render(request, 'kiosk/kiosk_form.html')
+
+
+def kiosk_qr_poster(request):
+    """Printable reception poster with QR code for patient smartphone self-check-in."""
+    host = request.get_host()
+    checkin_url = f"{request.scheme}://{host}/kiosk/"
+    qr_api_url = f"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={urllib.parse.quote(checkin_url)}"
+    return render(request, 'kiosk/kiosk_poster.html', {
+        'checkin_url': checkin_url,
+        'qr_api_url': qr_api_url
+    })
 

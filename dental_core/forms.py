@@ -3,7 +3,7 @@ from .models import (
     User, Patient, Appointment, ClinicalVisit, TreatmentItem,
     DentalLabOrder, DentalRadiograph, Prescription, PrescriptionItem,
     Invoice, InvoiceItem, Payment, DentalMaterialInventory, ToothRecord,
-    DentalConsentForm, WhatsAppNotification
+    DentalConsentForm, WhatsAppNotification, SmileTransformation
 )
 
 
@@ -185,4 +185,28 @@ class WhatsAppMessageForm(forms.Form):
     recipient_phone = forms.CharField(max_length=20, widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'e.g. +91 98765 43210'}))
     message_type = forms.ChoiceField(choices=WhatsAppNotification.MESSAGE_TYPES, widget=forms.Select(attrs={'class': 'form-select', 'id': 'id_wa_type', 'onchange': 'loadWhatsAppTemplate(this.value)'}))
     message_content = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-textarea', 'rows': 6, 'id': 'id_wa_content'}))
+
+
+class SmileTransformationForm(forms.ModelForm):
+    class Meta:
+        model = SmileTransformation
+        fields = [
+            'patient', 'dentist', 'title', 'category', 'pre_op_image',
+            'post_op_image', 'teeth_involved', 'shade_before', 'shade_after',
+            'clinical_case_notes', 'completed_date', 'is_featured'
+        ]
+        widgets = {
+            'patient': forms.Select(attrs={'class': 'form-select'}),
+            'dentist': forms.Select(attrs={'class': 'form-select'}),
+            'title': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'e.g. 6 Upper Anterior E-max Veneers'}),
+            'category': forms.Select(attrs={'class': 'form-select'}),
+            'pre_op_image': forms.FileInput(attrs={'class': 'form-input', 'accept': 'image/*'}),
+            'post_op_image': forms.FileInput(attrs={'class': 'form-input', 'accept': 'image/*'}),
+            'teeth_involved': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'e.g. #13 to #23'}),
+            'shade_before': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'e.g. A3.5'}),
+            'shade_after': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'e.g. BL2 or A1'}),
+            'clinical_case_notes': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 3, 'placeholder': 'Clinical technique, bonding protocol, ceramic system'}),
+            'completed_date': forms.DateInput(attrs={'class': 'form-input', 'type': 'date'}),
+            'is_featured': forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
+        }
 

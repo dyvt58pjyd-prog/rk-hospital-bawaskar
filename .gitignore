@@ -24,3 +24,13 @@ staticfiles/
 # Operating system files
 .DS_Store
 Thumbs.db
+
+# Android Gradle build artifacts & IDE configs
+android_app/.gradle/
+android_app/.idea/
+android_app/local.properties
+android_app/*/build/
+android_app/build/
+*.apk
+*.aab
+

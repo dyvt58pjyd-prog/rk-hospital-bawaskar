@@ -1,0 +1,128 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patient Self Check-In • RK Hospital Bawaskar</title>
+  <link rel="stylesheet" href="{% static 'css/hospital_theme.css' %}">
+  <style>
+    body {
+      background: radial-gradient(circle at top, #e0f2fe, #f8fafc 70%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .kiosk-card {
+      max-width: 600px;
+      width: 100%;
+      background: #ffffff;
+      border-radius: var(--radius-lg);
+      padding: 36px 32px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+      border: 1px solid var(--slate-200);
+    }
+    .kiosk-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: #ecfdf5;
+      color: #047857;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="kiosk-card">
+  <!-- Brand Header -->
+  <div style="text-align: center; margin-bottom: 24px;">
+    <span class="kiosk-badge">OPD WALKIN SELF-REGISTRATION</span>
+    <h1 style="font-size: 1.55rem; font-weight: 800; color: var(--slate-900); margin: 0 0 4px;">
+      RK HOSPITAL BAWASKAR
+    </h1>
+    <p style="color: var(--slate-500); font-size: 0.85rem; margin: 0;">
+      Centre of Dental Excellence & Maxillofacial Care • Nagpur Road
+    </p>
+  </div>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div style="padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 0.85rem; background: #fee2e2; color: #991b1b;">
+        {{ msg }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="POST">
+    {% csrf_token %}
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+      <div class="form-group">
+        <label class="form-label">First Name *</label>
+        <input type="text" name="first_name" class="form-input" placeholder="e.g. Rahul" required autofocus>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Last Name *</label>
+        <input type="text" name="last_name" class="form-input" placeholder="e.g. Sharma" required>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+      <div class="form-group">
+        <label class="form-label">Mobile Number *</label>
+        <input type="tel" name="phone" class="form-input" placeholder="10-digit number" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Gender *</label>
+        <select name="gender" class="form-select">
+          <option value="M">Male</option>
+          <option value="F">Female</option>
+          <option value="O">Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom: 14px;">
+      <label class="form-label">Main Reason for Visit / Tooth Problem *</label>
+      <input type="text" name="chief_complaint" class="form-input" placeholder="e.g. Severe toothache lower right, routine scaling, bleeding gums" required>
+    </div>
+
+    <!-- Quick Medical Safety Checklist -->
+    <div style="margin-bottom: 20px; padding: 14px; background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-sm);">
+      <div style="font-size: 0.78rem; font-weight: 700; color: var(--slate-700); margin-bottom: 8px;">
+        ⚠️ Quick Medical Safety Checklist (Please tick if applicable):
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.82rem; color: var(--slate-700);">
+        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+          <input type="checkbox" name="has_diabetes" value="1"> Diabetes / High Sugar
+        </label>
+        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+          <input type="checkbox" name="has_hypertension" value="1"> High BP / Hypertension
+        </label>
+        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+          <input type="checkbox" name="has_cardiac" value="1"> Heart Condition
+        </label>
+        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+          <input type="checkbox" name="has_allergies" value="1"> Drug Allergies (Penicillin etc.)
+        </label>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; font-weight: 800; font-size: 1rem; justify-content: center;">
+      ✓ Check In & Get Queue Token →
+    </button>
+  </form>
+
+  <div style="text-align: center; margin-top: 20px; font-size: 0.75rem; color: var(--slate-400);">
+    Your information is stored securely in RK Hospital Bawaskar Dental EMR System.
+  </div>
+</div>
+
+</body>
+</html>

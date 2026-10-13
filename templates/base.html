@@ -63,6 +63,12 @@
         <span>Chairs & Schedule</span>
       </a>
 
+      <div class="nav-section-title">Aesthetic & Clinical</div>
+      <a href="{% url 'smile_gallery' %}" class="nav-link {% if 'smile-gallery' in request.path %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+        <span>Smile Transformation Gallery</span>
+      </a>
+
       <div class="nav-section-title">Dental Hospital Ops</div>
       <a href="{% url 'lab_list' %}" class="nav-link {% if 'lab' in request.path %}active{% endif %}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v6a6 6 0 0 0 12 0V2"></path><line x1="6" y1="2" x2="18" y2="2"></line><line x1="12" y1="14" x2="12" y2="22"></line><line x1="8" y1="22" x2="16" y2="22"></line></svg>
@@ -79,8 +85,19 @@
         <span>Material Inventory</span>
       </a>
 
+      <div class="nav-section-title">Executive & Kiosk</div>
+      <a href="{% url 'analytics_dashboard' %}" class="nav-link {% if 'analytics' in request.path %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        <span>Executive Analytics Hub</span>
+      </a>
+
+      <a href="{% url 'kiosk_qr_poster' %}" class="nav-link {% if 'kiosk' in request.path %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        <span>OPD Kiosk & QR Poster</span>
+      </a>
+
       <div class="nav-section-title">Mobile App</div>
-      <a href="{% url 'mobile_companion' %}" class="nav-link" style="color: #38bdf8;">
+      <a href="{% url 'mobile_companion' %}" class="nav-link {% if 'mobile' in request.path %}active{% endif %}" style="color: #38bdf8;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
         <span>📱 Mobile Companion</span>
       </a>
