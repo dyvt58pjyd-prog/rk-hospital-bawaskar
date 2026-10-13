@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: rk-hospital-bawaskar
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn rk_hospital_core.wsgi:application"
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.4
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: RENDER
+        value: "true"

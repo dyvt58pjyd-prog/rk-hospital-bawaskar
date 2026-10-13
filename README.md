@@ -106,6 +106,52 @@ This repository is pre-configured with a standalone, mobile-responsive interacti
    https://<YOUR_GITHUB_USERNAME>.github.io/<YOUR_REPOSITORY_NAME>/
    ```
 
-> 💡 **Full Stack (Django Backend) Cloud Deployment Note**:
-> GitHub Pages serves client-side HTML, CSS, React, and JavaScript. To host the full Python/Django backend with persistent SQLite/PostgreSQL databases live on the web, you can connect this same GitHub repository to free cloud platforms like **Render.com**, **Railway.app**, or **PythonAnywhere.com** in 1 click using `python manage.py runserver` or Gunicorn.
+---
+
+## 🚀 Deploying Full-Stack Django on Render.com
+
+This repository is **100% Render-ready** with a pre-configured `render.yaml` Blueprint, Gunicorn WSGI server, WhiteNoise static compression, and automatic database migration & seeding.
+
+### Option A: 1-Click Blueprint Deploy (Fastest)
+
+1. Push this repository to your GitHub account:
+   ```bash
+   git add -A
+   git commit -m "Configure Render production deployment"
+   git push -u origin main
+   ```
+2. Log in to [Render.com](https://dashboard.render.com).
+3. Click **New +** > **Blueprint**.
+4. Connect your GitHub repository (`rk-hospital-bawaskar`).
+5. Render will automatically read [`render.yaml`](file:///Users/anurag.bawaskar/.gemini/antigravity-ide/scratch/rk_hospital_bawaskar/render.yaml) and configure the web service, build script, environment variables, and start command.
+6. Click **Apply**. Within ~2 minutes, your live dental hospital app will be live on Render!
+
+---
+
+### Option B: Manual Web Service Setup on Render
+
+If you prefer to configure manually on Render without Blueprints:
+
+1. In the Render Dashboard, click **New +** > **Web Service**.
+2. Select **Build and deploy from a Git repository** and pick your repo.
+3. Configure the following fields:
+   * **Name**: `rk-hospital-bawaskar`
+   * **Region**: Any (e.g., Singapore, Frankfurt, or Oregon)
+   * **Branch**: `main`
+   * **Language**: `Python`
+   * **Build Command**: `./build.sh`
+   * **Start Command**: `gunicorn rk_hospital_core.wsgi:application`
+   * **Instance Type**: `Free`
+4. Under **Environment Variables**, add:
+   * `PYTHON_VERSION`: `3.12.4`
+   * `SECRET_KEY`: *(Click "Generate" or enter a secure string)*
+   * `DEBUG`: `False`
+   * `RENDER`: `true`
+5. Click **Create Web Service**.
+
+Render will automatically run `./build.sh`, install all requirements, collect static files, run database migrations, seed all 6 role accounts (`dr.bawaskar`, `dr.sharma`, etc.), and launch Gunicorn!
+
+Your hospital application will be live at:
+`https://rk-hospital-bawaskar.onrender.com`
+
 
