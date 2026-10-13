@@ -321,6 +321,7 @@ def patient_detail(request, pk):
         'invoices': invoices,
         'appointments': appointments,
         'dentists': dentists,
+        'operatories': DentalOperatory.objects.filter(is_active=True),
         'procedures': procedures,
         'total_billed': total_billed,
         'total_paid': total_paid,
@@ -716,14 +717,24 @@ def appointment_list(request):
 
 @login_required
 def appointment_create(request):
+    redirect_target = request.POST.get('redirect_to', 'appointment_list')
     if request.method == 'POST':
         form = AppointmentForm(request.POST)
         if form.is_valid():
-            appt = form.save()
-            messages.success(request, f"Appointment booked for {appt.patient.full_name} on {appt.appointment_date} at {appt.start_time}!")
+            appt = form.save(commit=False)
+            if not appt.status:
+                appt.status = 'SCHEDULED'
+            appt.save()
+            messages.success(request, f"Appointment booked for {appt.patient.full_name} with Dr. {appt.dentist.get_full_name() or appt.dentist.username} on {appt.appointment_date} at {appt.start_time}!")
+            if redirect_target == 'dashboard':
+                return redirect('dashboard')
+            elif redirect_target == 'patient':
+                return redirect(f"/patients/{appt.patient.id}/?tab=appointments")
             return redirect('appointment_list')
         else:
-            messages.error(request, "Failed to schedule appointment. Please check required fields.")
+            for field, errs in form.errors.items():
+                label = form.fields[field].label if field in form.fields and form.fields[field].label else field
+                messages.error(request, f"Appointment booking error ({label}): {', '.join(errs)}")
     return redirect('appointment_list')
 
 

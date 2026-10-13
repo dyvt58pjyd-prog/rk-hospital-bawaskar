@@ -693,7 +693,13 @@
 {% if active_tab == 'appointments' %}
 <div class="card">
   <div class="card-header">
-    <div class="card-title">Appointment History & Upcoming Sittings</div>
+    <div>
+      <div class="card-title">Appointment History & Upcoming Sittings</div>
+      <div style="font-size: 0.82rem; color: var(--slate-500);">Clinical bookings and operatory chair schedules for {{ patient.full_name }}</div>
+    </div>
+    <button type="button" onclick="document.getElementById('patientBookApptModal').classList.add('active')" class="btn btn-primary btn-sm">
+      + Book Appointment
+    </button>
   </div>
   <div class="table-container">
     <table class="data-table">
@@ -876,6 +882,80 @@
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
         <button type="button" onclick="document.getElementById('uploadXrayModal').classList.remove('active')" class="btn btn-secondary">Cancel</button>
         <button type="submit" class="btn btn-primary">Upload & Attach to EMR</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Schedule Appointment for Patient -->
+<div id="patientBookApptModal" class="modal-overlay">
+  <div class="modal-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--slate-900);">
+        Schedule Dental Sitting for {{ patient.full_name }}
+      </h3>
+      <button type="button" onclick="document.getElementById('patientBookApptModal').classList.remove('active')" style="background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--slate-400); font-weight: bold;">✕</button>
+    </div>
+
+    <form method="POST" action="{% url 'appointment_create' %}">
+      {% csrf_token %}
+      <input type="hidden" name="patient" value="{{ patient.id }}">
+      <input type="hidden" name="redirect_to" value="patient">
+
+      <div class="form-group">
+        <label class="form-label">Dentist / Specialist *</label>
+        <select name="dentist" class="form-select" required>
+          {% for d in dentists %}
+            <option value="{{ d.id }}">Dr. {{ d.get_full_name }} ({{ d.specialization|default:"Dentist" }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="form-group">
+          <label class="form-label">Appointment Date *</label>
+          <input type="date" name="appointment_date" class="form-input" value="{% now 'Y-m-d' %}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Start Time *</label>
+          <input type="time" name="start_time" class="form-input" value="10:00" required>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="form-group">
+          <label class="form-label">Operatory Chair (Optional)</label>
+          <select name="chair" class="form-select">
+            <option value="">-- Auto-assign Chair --</option>
+            {% for op in operatories %}
+              <option value="{{ op.id }}">Chair {{ op.chair_number }} - {{ op.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Booking Status</label>
+          <select name="status" class="form-select">
+            <option value="SCHEDULED" selected>Scheduled</option>
+            <option value="CONFIRMED">Confirmed</option>
+            <option value="CHECKED_IN">Checked In (OPD Queue)</option>
+            <option value="IN_CHAIR">In Chair / In Treatment</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Procedure / Reason for Visit *</label>
+        <input type="text" name="reason" class="form-input" placeholder="e.g. Toothache, Scaling, Root Canal Sitting 2, Crown Fitting" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Clinical Notes</label>
+        <textarea name="notes" rows="2" class="form-textarea" placeholder="Special requirements or medical precautions"></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button type="button" onclick="document.getElementById('patientBookApptModal').classList.remove('active')" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary">Confirm Appointment</button>
       </div>
     </form>
   </div>

@@ -111,9 +111,15 @@
         <label class="form-label">Dentist / Specialist *</label>
         {{ form.dentist }}
       </div>
-      <div class="form-group">
-        <label class="form-label">Operatory Chair *</label>
-        {{ form.chair }}
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="form-group">
+          <label class="form-label">Operatory Chair (Optional)</label>
+          {{ form.chair }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Booking Status</label>
+          {{ form.status }}
+        </div>
       </div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <div class="form-group">

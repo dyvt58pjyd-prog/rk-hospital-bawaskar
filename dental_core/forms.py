@@ -1,6 +1,6 @@
 from django import forms
 from .models import (
-    Patient, Appointment, ClinicalVisit, TreatmentItem,
+    User, Patient, Appointment, ClinicalVisit, TreatmentItem,
     DentalLabOrder, DentalRadiograph, Prescription, PrescriptionItem,
     Invoice, InvoiceItem, Payment, DentalMaterialInventory, ToothRecord
 )
@@ -51,6 +51,18 @@ class AppointmentForm(forms.ModelForm):
             'status': forms.Select(attrs={'class': 'form-select'}),
             'notes': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 2, 'placeholder': 'Special notes or instructions'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['dentist'].queryset = User.objects.filter(role='DENTIST')
+        self.fields['status'].required = False
+        self.fields['status'].initial = 'SCHEDULED'
+        self.fields['chair'].required = False
+        self.fields['end_time'].required = False
+        self.fields['notes'].required = False
+
+    def clean_status(self):
+        return self.cleaned_data.get('status') or 'SCHEDULED'
 
 
 class ClinicalVisitForm(forms.ModelForm):
