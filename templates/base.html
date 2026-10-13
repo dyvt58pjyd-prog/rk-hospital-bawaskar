@@ -69,6 +69,11 @@
         <span>Smile Transformation Gallery</span>
       </a>
 
+      <a href="{% url 'radiograph_hub' %}" class="nav-link {% if 'radiograph' in request.path %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+        <span>Dental Radiology & X-Rays</span>
+      </a>
+
       <div class="nav-section-title">Dental Hospital Ops</div>
       <a href="{% url 'lab_list' %}" class="nav-link {% if 'lab' in request.path %}active{% endif %}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v6a6 6 0 0 0 12 0V2"></path><line x1="6" y1="2" x2="18" y2="2"></line><line x1="12" y1="14" x2="12" y2="22"></line><line x1="8" y1="22" x2="16" y2="22"></line></svg>
@@ -127,30 +132,48 @@
 
   <!-- Main Content Area -->
   <div class="main-content">
-    <!-- Top Bar -->
+    <!-- Top Bar with Professional Branding -->
     <header class="top-nav">
-      <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 14px;">
         <!-- Mobile Drawer Hamburger Toggle Button -->
         <button type="button" class="mobile-toggle-btn" id="sidebarToggleBtn" aria-label="Open Navigation Menu">
           <svg style="width: 22px; height: 22px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
 
-        <span class="desktop-hospital-title" style="font-size: 0.85rem; color: var(--slate-500); font-weight: 600;">
-          🏥 RK Hospital Bawaskar • Centre of Dental Excellence & Maxillofacial Surgery
-        </span>
-        <span class="mobile-hospital-title" style="display: none; font-weight: 800; font-size: 0.95rem; color: var(--slate-900);">
-          🏥 RK Hospital Bawaskar
-        </span>
+        <!-- Brand Crest & Header -->
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 38px; height: 38px; background: linear-gradient(135deg, #0ea5e9, #0284c7); border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35); font-size: 1.25rem;">
+            🦷
+          </div>
+          <div>
+            <div class="brand-font" style="font-weight: 800; font-size: 1.05rem; color: var(--slate-900); line-height: 1.15; letter-spacing: -0.01em;">
+              RK Hospital Bawaskar
+            </div>
+            <div style="font-size: 0.72rem; color: #0284c7; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase;">
+              Centre of Dental Excellence
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="top-nav-actions" style="display: flex; align-items: center; gap: 10px;">
+        <!-- Quick Emergency Line -->
+        <a href="tel:+919822011223" class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 0.76rem; color: #ef4444; border-color: #fecaca; background: #fef2f2;" title="24/7 Dental Emergency Desk">
+          🚨 Emergency: +91 98220 11223
+        </a>
+
+        <!-- Mobile Companion Link -->
+        <a href="{% url 'mobile_companion' %}" class="btn btn-secondary btn-sm" style="color: #0284c7; border-color: #bae6fd; background: #f0f9ff; padding: 6px 12px; font-size: 0.78rem;">
+          📱 Mobile App
+        </a>
+
         <!-- Role badge -->
         <span class="badge top-role-badge" style="background: #e0f2fe; color: #0284c7; padding: 6px 12px; font-size: 0.78rem; font-weight: 700;">
           {{ user.get_role_display }}
         </span>
 
         {% if not user.is_patient_user %}
-        <a href="{% url 'patient_create' %}" class="btn btn-primary btn-sm" style="white-space: nowrap;">
+        <a href="{% url 'patient_create' %}" class="btn btn-primary btn-sm" style="white-space: nowrap; background: #0ea5e9; border-color: #0ea5e9;">
           <svg style="width: 15px; height: 15px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           <span class="btn-text-hide-mobile">New Patient</span>
         </a>

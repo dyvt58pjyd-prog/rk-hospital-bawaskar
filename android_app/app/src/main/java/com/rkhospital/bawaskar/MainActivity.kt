@@ -43,11 +43,16 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
+            val data = result.data
             val results: Array<Uri>? = when {
-                result.data?.data != null -> arrayOf(result.data!!.data!)
-                result.data?.clipData != null -> {
-                    val count = result.data!!.clipData!!.itemCount
-                    Array(count) { i -> result.data!!.clipData!!.getItemAt(i).uri }
+                data?.data != null -> arrayOf(data.data!!)
+                data?.clipData != null -> {
+                    val clipData = data.clipData!!
+                    val uris = mutableListOf<Uri>()
+                    for (i in 0 until clipData.itemCount) {
+                        clipData.getItemAt(i).uri?.let { uris.add(it) }
+                    }
+                    if (uris.isNotEmpty()) uris.toTypedArray() else null
                 }
                 cameraImageUri != null -> arrayOf(cameraImageUri!!)
                 else -> null
@@ -70,6 +75,34 @@ class MainActivity : AppCompatActivity() {
         loadingProgressBar = findViewById(R.id.loadingProgressBar)
         offlineContainer = findViewById(R.id.offlineContainer)
         btnRetry = findViewById(R.id.btnRetryConnection)
+
+        val makeCall = {
+            try {
+                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+919422830303"))
+                startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(this, "Unable to make call", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Header actions
+        findViewById<View>(R.id.btnHeaderCall).setOnClickListener { makeCall() }
+        findViewById<View>(R.id.btnHeaderRefresh).setOnClickListener { webView.loadUrl(hospitalPortalUrl) }
+
+        // Bottom Navigation Tabs
+        findViewById<View>(R.id.navTabPortal).setOnClickListener {
+            webView.loadUrl(hospitalPortalUrl)
+        }
+        findViewById<View>(R.id.navTabAppointments).setOnClickListener {
+            startActivity(Intent(this, AppointmentActivity::class.java))
+        }
+        findViewById<View>(R.id.navTabXRay).setOnClickListener {
+            Toast.makeText(this, "Opening Camera & X-Ray Radiograph Uploader", Toast.LENGTH_SHORT).show()
+            webView.loadUrl("javascript:(function(){ var input = document.querySelector('input[type=file]'); if(input) input.click(); else alert('Please tap upload inside the form'); })()")
+        }
+        findViewById<View>(R.id.navTabEmergency).setOnClickListener {
+            makeCall()
+        }
 
         // SwipeRefresh styling
         swipeRefreshLayout.setColorSchemeColors(

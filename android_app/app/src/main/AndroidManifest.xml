@@ -16,14 +16,25 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/progress_gradient"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/progress_gradient"
         android:supportsRtl="true"
         android:theme="@style/Theme.RKHospital"
         android:hardwareAccelerated="true"
         android:largeHeap="true"
         android:usesCleartextTraffic="true">
+
+        <!-- Splash Screen Activity as Launcher -->
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.RKHospital">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name=".MainActivity"
@@ -31,10 +42,12 @@
             android:configChanges="orientation|screenSize|keyboardHidden|screenLayout"
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.RKHospital">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".AppointmentActivity"
+            android:exported="false"
+            android:theme="@style/Theme.RKHospital">
         </activity>
 
         <!-- Native File Provider for High-Res Camera Capture -->

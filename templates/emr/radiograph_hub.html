@@ -1,0 +1,355 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Dental Radiology & Radiograph Studio • RK Hospital Bawaskar{% endblock %}
+
+{% block extra_head %}
+<style>
+  .rad-filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .rad-filter-btn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    border: 1px solid var(--slate-300);
+    background: #ffffff;
+    color: var(--slate-700);
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .rad-filter-btn:hover, .rad-filter-btn.active {
+    background: #0ea5e9;
+    color: #ffffff;
+    border-color: #0ea5e9;
+    box-shadow: 0 2px 10px rgba(14, 165, 233, 0.3);
+  }
+  .rad-filter-count {
+    padding: 2px 7px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    background: rgba(0, 0, 0, 0.08);
+  }
+  .rad-filter-btn.active .rad-filter-count {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+  }
+
+  .rad-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  .rad-card {
+    background: #090e17;
+    border: 1.5px solid #1e2e47;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s, border-color 0.2s;
+    display: flex;
+    flex-direction: column;
+  }
+  .rad-card:hover {
+    transform: translateY(-3px);
+    border-color: #0ea5e9;
+    box-shadow: 0 8px 24px rgba(14, 165, 233, 0.2);
+  }
+  .rad-preview-box {
+    position: relative;
+    background: #000000;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .rad-preview-box img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+  }
+  .rad-preview-box:hover img {
+    transform: scale(1.04);
+  }
+  .rad-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(4px);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+  }
+  .rad-tooth-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(16, 185, 129, 0.85);
+    backdrop-filter: blur(4px);
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .rad-info-body {
+    padding: 16px;
+    background: #131d2e;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .rad-patient-name {
+    font-size: 0.98rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 2px;
+  }
+  .rad-findings {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    margin: 8px 0;
+    line-height: 1.4;
+    background: rgba(0, 0, 0, 0.25);
+    padding: 8px 10px;
+    border-radius: 6px;
+    border-left: 3px solid #0ea5e9;
+  }
+  .rad-meta {
+    font-size: 0.72rem;
+    color: #64748b;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto;">
+
+  <!-- Header -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; flex-wrap: wrap; gap: 14px;">
+    <div>
+      <div style="font-size: 0.82rem; font-weight: 700; color: #0284c7; text-transform: uppercase; letter-spacing: 0.05em;">
+        Radiology & Diagnostic Imaging
+      </div>
+      <h1 style="font-size: 1.7rem; font-weight: 900; color: var(--slate-900); margin: 2px 0 4px;">
+        Dental Radiograph & Clinical Photo Studio
+      </h1>
+      <p style="color: var(--slate-500); font-size: 0.88rem; margin: 0;">
+        Secure high-resolution repository for IOPA, OPG Panoramics, CBCT Slices & Intraoral Camera Photos
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+      <a href="{% url 'mobile_companion' %}" class="btn btn-secondary btn-sm" style="color: #0284c7;">
+        📱 Mobile Camera
+      </a>
+      <button onclick="document.getElementById('uploadRadModal').classList.add('active')" class="btn btn-primary btn-sm" style="box-shadow: 0 4px 14px rgba(14, 165, 233, 0.4);">
+        📸 + Upload Radiograph
+      </button>
+    </div>
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <div class="card" style="padding: 16px 20px; margin-bottom: 20px;">
+    <form method="GET" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 260px;">
+        <input type="text" name="q" value="{{ query }}" class="form-input" placeholder="Search by patient name, MRN, tooth #, or radiographic findings..." style="width: 100%;">
+      </div>
+      <button type="submit" class="btn btn-secondary btn-sm">Search</button>
+      {% if query or type_filter %}
+        <a href="{% url 'radiograph_hub' %}" class="btn btn-secondary btn-sm" style="color: #ef4444;">Clear Filters</a>
+      {% endif %}
+    </form>
+  </div>
+
+  <!-- Modality Filter Chips -->
+  <div class="rad-filters">
+    <a href="{% url 'radiograph_hub' %}" class="rad-filter-btn {% if not type_filter %}active{% endif %}">
+      All Modalities <span class="rad-filter-count">{{ type_counts.ALL }}</span>
+    </a>
+    <a href="{% url 'radiograph_hub' %}?type=IOPA" class="rad-filter-btn {% if type_filter == 'IOPA' %}active{% endif %}">
+      🦷 IOPA (Periapical) <span class="rad-filter-count">{{ type_counts.IOPA }}</span>
+    </a>
+    <a href="{% url 'radiograph_hub' %}?type=OPG" class="rad-filter-btn {% if type_filter == 'OPG' %}active{% endif %}">
+      🌐 OPG (Panoramic) <span class="rad-filter-count">{{ type_counts.OPG }}</span>
+    </a>
+    <a href="{% url 'radiograph_hub' %}?type=CBCT" class="rad-filter-btn {% if type_filter == 'CBCT' %}active{% endif %}">
+      🧊 CBCT 3D <span class="rad-filter-count">{{ type_counts.CBCT }}</span>
+    </a>
+    <a href="{% url 'radiograph_hub' %}?type=INTRAORAL_PHOTO" class="rad-filter-btn {% if type_filter == 'INTRAORAL_PHOTO' %}active{% endif %}">
+      📸 Intraoral Photos <span class="rad-filter-count">{{ type_counts.INTRAORAL_PHOTO }}</span>
+    </a>
+    <a href="{% url 'radiograph_hub' %}?type=SMILE_PHOTO" class="rad-filter-btn {% if type_filter == 'SMILE_PHOTO' %}active{% endif %}">
+      ✨ Smile Photos <span class="rad-filter-count">{{ type_counts.SMILE_PHOTO }}</span>
+    </a>
+  </div>
+
+  <!-- Radiographs Grid -->
+  {% if radiographs %}
+  <div class="rad-grid">
+    {% for rad in radiographs %}
+    <div class="rad-card">
+      <div class="rad-preview-box" onclick="openLightbox('{{ rad.image_file.url }}', '{{ rad.patient.full_name }} - {{ rad.get_image_type_display }}')">
+        <img src="{{ rad.image_file.url }}" alt="{{ rad.get_image_type_display }}" loading="lazy">
+        <span class="rad-badge">{{ rad.get_image_type_display }}</span>
+        {% if rad.tooth_number %}
+          <span class="rad-tooth-badge">Tooth {{ rad.tooth_number }}</span>
+        {% endif %}
+      </div>
+
+      <div class="rad-info-body">
+        <div>
+          <div class="rad-patient-name">
+            <a href="{% url 'patient_detail' rad.patient.id %}" style="color: #38bdf8; text-decoration: none;">
+              {{ rad.patient.full_name }}
+            </a>
+          </div>
+          <div style="font-size: 0.75rem; color: #94a3b8;">
+            MRN: <b>{{ rad.patient.mrn }}</b> • Phone: {{ rad.patient.phone }}
+          </div>
+
+          <div class="rad-findings">
+            {{ rad.findings|default:"No specific radiographic notes provided." }}
+          </div>
+        </div>
+
+        <div>
+          <div class="rad-meta">
+            <span>Dr. {{ rad.dentist.get_full_name|default:rad.dentist.username }}</span>
+            <span>{{ rad.captured_date|date:"M d, Y" }}</span>
+          </div>
+
+          <div style="margin-top: 10px; display: flex; gap: 8px;">
+            <a href="{{ rad.image_file.url }}" target="_blank" download class="btn btn-secondary btn-sm" style="flex: 1; padding: 6px; font-size: 0.75rem; justify-content: center; background: #1e2e47; color: #ffffff; border-color: #2e4468;">
+              ⬇ Download
+            </a>
+            <a href="{% url 'patient_detail' rad.patient.id %}?tab=radiographs" class="btn btn-secondary btn-sm" style="flex: 1; padding: 6px; font-size: 0.75rem; justify-content: center; background: #0f172a; color: #38bdf8; border-color: #2e4468;">
+              EMR Chart →
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card" style="padding: 48px; text-align: center;">
+    <div style="font-size: 3rem; margin-bottom: 12px;">🩻</div>
+    <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--slate-800); margin-bottom: 6px;">
+      No Radiographs Found
+    </h3>
+    <p style="color: var(--slate-500); font-size: 0.88rem; max-width: 440px; margin: 0 auto 20px;">
+      There are no dental X-rays or camera photos matching your search criteria. You can upload a new radiograph or capture one via the mobile companion camera.
+    </p>
+    <button onclick="document.getElementById('uploadRadModal').classList.add('active')" class="btn btn-primary">
+      📸 Upload First Radiograph
+    </button>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- Upload Radiograph Modal -->
+<div id="uploadRadModal" class="modal-overlay">
+  <div class="modal-content" style="max-width: 580px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid var(--slate-200); padding-bottom: 12px;">
+      <h3 style="font-size: 1.2rem; font-weight: 800; margin: 0; color: var(--slate-900);">
+        📸 Upload Dental Radiograph / Photo
+      </h3>
+      <button onclick="document.getElementById('uploadRadModal').classList.remove('active')" style="background:none; border:none; font-size: 1.3rem; color: var(--slate-400); cursor:pointer;">✕</button>
+    </div>
+
+    <form method="POST" action="{% url 'radiograph_general_upload' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label class="form-label">Select Patient *</label>
+        <select name="patient_id" class="form-select" required>
+          <option value="" disabled selected>Search & choose patient...</option>
+          {% for p in all_patients %}
+            <option value="{{ p.id }}">{{ p.full_name }} ({{ p.mrn }} • {{ p.phone }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+        <div class="form-group">
+          <label class="form-label">Imaging Modality *</label>
+          <select name="image_type" class="form-select" required>
+            <option value="IOPA">IOPA (Periapical X-Ray)</option>
+            <option value="OPG">OPG (Full Panoramic)</option>
+            <option value="BITEWING">Bitewing Radiograph</option>
+            <option value="CBCT">CBCT 3D Scan Slice</option>
+            <option value="INTRAORAL_PHOTO">Intraoral Camera Photo</option>
+            <option value="SMILE_PHOTO">Clinical Smile / Extraoral Photo</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tooth or Quadrant Involved</label>
+          <input type="text" name="tooth_number" class="form-input" placeholder="e.g. 36, 11-21, Upper Right">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label class="form-label">X-Ray / Photo File (DICOM / JPEG / PNG) *</label>
+        <input type="file" name="image_file" class="form-input" accept="image/*" required style="padding: 10px;">
+        <span style="font-size: 0.72rem; color: var(--slate-500); display: block; margin-top: 4px;">
+          Select from device storage or take a photo with your connected camera.
+        </span>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label class="form-label">Radiographic Findings / Clinical Notes</label>
+        <textarea name="findings" class="form-textarea" rows="3" placeholder="e.g. Radiolucency extending into pulp chamber of #36; widened PDL space; bone crest intact"></textarea>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button type="button" onclick="document.getElementById('uploadRadModal').classList.remove('active')" class="btn btn-secondary">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" style="background: #0ea5e9; border-color: #0ea5e9; font-weight: 700;">
+          Save & Attach to EMR
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Lightbox Modal for Fullscreen Radiograph Inspection -->
+<div id="radLightbox" class="modal-overlay" onclick="if(event.target===this)closeLightbox()">
+  <div style="max-width: 90vw; max-height: 90vh; position: relative; text-align: center;">
+    <button onclick="closeLightbox()" style="position: absolute; top: -38px; right: 0; background: none; border: none; color: #ffffff; font-size: 2rem; cursor: pointer;">✕</button>
+    <img id="lightboxImg" src="" alt="Radiograph Enlarged" style="max-width: 85vw; max-height: 80vh; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); border: 2px solid #38bdf8;">
+    <div id="lightboxTitle" style="color: #ffffff; font-size: 0.95rem; font-weight: 700; margin-top: 10px;"></div>
+  </div>
+</div>
+
+<script>
+  function openLightbox(url, title) {
+    document.getElementById('lightboxImg').src = url;
+    document.getElementById('lightboxTitle').innerText = title;
+    document.getElementById('radLightbox').classList.add('active');
+  }
+  function closeLightbox() {
+    document.getElementById('radLightbox').classList.remove('active');
+  }
+</script>
+{% endblock %}

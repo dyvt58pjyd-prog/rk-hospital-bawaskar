@@ -6,6 +6,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.db import models
 import urllib.parse
 from django.db.models import Q, Sum, Count, F
@@ -725,7 +726,18 @@ def appointment_create(request):
             for field, errs in form.errors.items():
                 label = form.fields[field].label if field in form.fields and form.fields[field].label else field
                 messages.error(request, f"Appointment booking error ({label}): {', '.join(errs)}")
-    return redirect('appointment_list')
+            return render(request, 'appointments/appointment_form.html', {'form': form})
+    else:
+        patient_id = request.GET.get('patient_id')
+        initial_data = {
+            'appointment_date': timezone.now().date(),
+            'start_time': '10:00',
+            'status': 'SCHEDULED',
+        }
+        if patient_id:
+            initial_data['patient'] = patient_id
+        form = AppointmentForm(initial=initial_data)
+        return render(request, 'appointments/appointment_form.html', {'form': form})
 
 
 @login_required
@@ -1263,12 +1275,12 @@ def mobile_quick_radiograph(request):
         rad = DentalRadiograph.objects.create(
             patient=patient,
             dentist=dentist,
-            image=image,
+            image_file=image,
             image_type=image_type,
             tooth_number=tooth_number or 'Oral Cavity',
-            clinical_notes=notes or 'Captured via Android Mobile Companion'
+            findings=notes or 'Captured via Android Mobile Companion'
         )
-        messages.success(request, f"✓ Dental photo saved to {patient.full_name}'s EMR!")
+        messages.success(request, f"✓ Dental radiograph / photo saved to {patient.full_name}'s EMR!")
         return redirect('mobile_companion')
 
     return redirect('mobile_companion')
@@ -1471,4 +1483,317 @@ def kiosk_qr_poster(request):
         'checkin_url': checkin_url,
         'qr_api_url': qr_api_url
     })
+
+
+# ==========================================
+# REST API V1 APPOINTMENTS (Android / Flutter / Web)
+# ==========================================
+
+def _parse_date_time_string(dt_str):
+    """Helper to parse varied date and time strings reliably."""
+    if not dt_str:
+        return timezone.now().date(), timezone.now().time()
+    dt_str = str(dt_str).strip()
+    formats = [
+        "%Y-%m-%d %H:%M",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%dT%H:%M",
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%d",
+        "%d-%m-%Y %H:%M",
+        "%d/%m/%Y %H:%M",
+        "%d-%m-%Y",
+        "%d/%m/%Y"
+    ]
+    for fmt in formats:
+        try:
+            dt = datetime.datetime.strptime(dt_str, fmt)
+            if fmt in ["%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y"]:
+                return dt.date(), datetime.time(10, 0)
+            return dt.date(), dt.time()
+        except (ValueError, TypeError):
+            continue
+    return timezone.now().date(), timezone.now().time()
+
+
+@csrf_exempt
+def api_v1_appointments(request):
+    """
+    Robust REST API endpoint for Kotlin Native Android, Flutter, and web clients:
+    GET  /api/v1/appointments/ -> Returns JSON list of all appointments.
+    POST /api/v1/appointments/ -> Accepts JSON or form data, creates an appointment with validation.
+    """
+    if request.method == 'GET':
+        appts = Appointment.objects.all().select_related('patient', 'dentist', 'chair').order_by('-appointment_date', '-start_time')
+        
+        date_param = request.GET.get('date')
+        if date_param:
+            appts = appts.filter(appointment_date=date_param)
+        
+        status_param = request.GET.get('status')
+        if status_param:
+            appts = appts.filter(status=status_param.upper())
+            
+        data = []
+        for a in appts:
+            dt_str = f"{a.appointment_date} {a.start_time.strftime('%H:%M')}" if a.start_time else str(a.appointment_date)
+            data.append({
+                'id': a.id,
+                'patient_id': a.patient.id if a.patient else None,
+                'patient_name': a.patient.full_name if a.patient else 'Unknown Patient',
+                'patientName': a.patient.full_name if a.patient else 'Unknown Patient',
+                'patient_mrn': a.patient.mrn if a.patient else '',
+                'patient_phone': a.patient.phone if a.patient else '',
+                'procedure': a.reason,
+                'treatment': a.reason,
+                'date': dt_str,
+                'appointment_date': str(a.appointment_date),
+                'start_time': a.start_time.strftime('%H:%M') if a.start_time else '09:00',
+                'status': a.get_status_display(),
+                'status_code': a.status,
+                'dentist_name': a.dentist.get_full_name() or a.dentist.username if a.dentist else 'General Dentist',
+                'dentist_id': a.dentist.id if a.dentist else None,
+                'chair_number': a.chair.chair_number if a.chair else None,
+                'chair_name': a.chair.name if a.chair else 'Operatory'
+            })
+        return JsonResponse(data, safe=False)
+
+    elif request.method == 'POST':
+        try:
+            if request.content_type and 'application/json' in request.content_type:
+                payload = json.loads(request.body.decode('utf-8'))
+            else:
+                payload = request.POST.dict()
+                if not payload and request.body:
+                    try:
+                        payload = json.loads(request.body.decode('utf-8'))
+                    except Exception:
+                        payload = {}
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': f'Invalid JSON payload: {str(e)}'}, status=400)
+
+        patient_name = payload.get('patient_name') or payload.get('patientName') or payload.get('name')
+        if not patient_name:
+            return JsonResponse({'success': False, 'error': 'Missing required field: patient_name'}, status=400)
+            
+        patient_name = str(patient_name).strip()
+        procedure = payload.get('procedure') or payload.get('treatment') or payload.get('reason') or 'General Dental Consultation'
+        date_str = payload.get('date') or payload.get('appointment_date') or payload.get('datetime') or ''
+        phone = payload.get('phone') or payload.get('phone_number') or ''
+        notes = payload.get('notes') or ''
+
+        # Parse date and time
+        appt_date, appt_time = _parse_date_time_string(date_str)
+
+        # Match or auto-create patient
+        patient = None
+        if phone:
+            patient = Patient.objects.filter(phone=phone).first()
+        if not patient:
+            parts = patient_name.split(None, 1)
+            fname = parts[0]
+            lname = parts[1] if len(parts) > 1 else 'Patient'
+            patient = Patient.objects.filter(first_name__iexact=fname, last_name__iexact=lname).first()
+            if not patient:
+                count = Patient.objects.count() + 1
+                year = timezone.now().year
+                mrn = f"RKH-{year}-{count:04d}"
+                patient = Patient.objects.create(
+                    mrn=mrn,
+                    first_name=fname,
+                    last_name=lname,
+                    phone=phone or '9999999999',
+                    gender=payload.get('gender', 'M')
+                )
+
+        # Dentist assignment
+        dentist = None
+        dentist_id = payload.get('dentist_id') or payload.get('dentist')
+        if dentist_id:
+            dentist = User.objects.filter(id=dentist_id, role__in=['DENTIST', 'ADMIN']).first()
+        if not dentist:
+            dentist = User.objects.filter(role='DENTIST').first() or User.objects.filter(is_superuser=True).first()
+
+        # Chair assignment
+        chair = None
+        chair_id = payload.get('chair_id') or payload.get('chair')
+        if chair_id:
+            chair = DentalOperatory.objects.filter(id=chair_id).first()
+        if not chair:
+            chair = DentalOperatory.objects.first()
+
+        status = str(payload.get('status', 'SCHEDULED')).upper()
+        if status not in dict(Appointment.STATUS_CHOICES):
+            status = 'SCHEDULED'
+
+        appt = Appointment.objects.create(
+            patient=patient,
+            dentist=dentist,
+            chair=chair,
+            appointment_date=appt_date,
+            start_time=appt_time,
+            reason=procedure,
+            status=status,
+            notes=notes
+        )
+
+        dt_formatted = f"{appt.appointment_date} {appt.start_time.strftime('%H:%M')}"
+        return JsonResponse({
+            'success': True,
+            'message': 'Appointment booked successfully!',
+            'id': appt.id,
+            'appointment': {
+                'id': appt.id,
+                'patient_name': patient.full_name,
+                'patient_mrn': patient.mrn,
+                'procedure': appt.reason,
+                'date': dt_formatted,
+                'appointment_date': str(appt.appointment_date),
+                'start_time': appt.start_time.strftime('%H:%M'),
+                'status': appt.get_status_display(),
+                'status_code': appt.status,
+                'dentist_name': dentist.get_full_name() if dentist else '',
+                'chair_number': chair.chair_number if chair else None
+            }
+        }, status=201)
+
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@csrf_exempt
+def api_v1_appointment_detail(request, pk):
+    """
+    REST API endpoint for single appointment management:
+    GET    /api/v1/appointments/<id>/ -> Retrieve single appointment details.
+    PATCH/PUT /api/v1/appointments/<id>/ -> Update status or notes.
+    DELETE /api/v1/appointments/<id>/ -> Cancel/delete appointment.
+    """
+    appt = get_object_or_404(Appointment, pk=pk)
+    if request.method == 'GET':
+        dt_str = f"{appt.appointment_date} {appt.start_time.strftime('%H:%M')}" if appt.start_time else str(appt.appointment_date)
+        return JsonResponse({
+            'id': appt.id,
+            'patient_id': appt.patient.id,
+            'patient_name': appt.patient.full_name,
+            'patient_mrn': appt.patient.mrn,
+            'procedure': appt.reason,
+            'date': dt_str,
+            'appointment_date': str(appt.appointment_date),
+            'start_time': appt.start_time.strftime('%H:%M') if appt.start_time else '',
+            'status': appt.get_status_display(),
+            'status_code': appt.status,
+            'dentist_name': appt.dentist.get_full_name() if appt.dentist else '',
+            'chair_number': appt.chair.chair_number if appt.chair else None,
+            'notes': appt.notes or ''
+        })
+    elif request.method in ['PUT', 'PATCH']:
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            payload = request.POST.dict()
+        if 'status' in payload:
+            st = payload['status'].upper()
+            if st in dict(Appointment.STATUS_CHOICES):
+                appt.status = st
+        if 'reason' in payload or 'procedure' in payload:
+            appt.reason = payload.get('procedure') or payload.get('reason')
+        if 'notes' in payload:
+            appt.notes = payload['notes']
+        appt.save()
+        return JsonResponse({'success': True, 'message': 'Appointment updated successfully', 'status': appt.get_status_display()})
+    elif request.method == 'DELETE':
+        appt.delete()
+        return JsonResponse({'success': True, 'message': 'Appointment deleted successfully'})
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+# ==========================================
+# RADIOLOGY & DENTAL RADIOGRAPH HUB
+# ==========================================
+
+@login_required
+def radiograph_hub(request):
+    """
+    Centralized Radiology & Radiograph Studio:
+    Browse all clinical radiographs (IOPA, OPG, Bitewing, CBCT, Intraoral Camera, Smile Photos)
+    with filter by type, patient search, and quick upload modal.
+    """
+    type_filter = request.GET.get('type', '')
+    query = request.GET.get('q', '').strip()
+
+    radiographs = DentalRadiograph.objects.all().select_related('patient', 'dentist')
+    if type_filter:
+        radiographs = radiographs.filter(image_type=type_filter)
+    if query:
+        radiographs = radiographs.filter(
+            Q(patient__first_name__icontains=query) |
+            Q(patient__last_name__icontains=query) |
+            Q(patient__mrn__icontains=query) |
+            Q(tooth_number__icontains=query) |
+            Q(findings__icontains=query)
+        )
+
+    all_patients = Patient.objects.all().order_by('first_name', 'last_name')
+    type_counts = {
+        'ALL': DentalRadiograph.objects.count(),
+        'IOPA': DentalRadiograph.objects.filter(image_type='IOPA').count(),
+        'OPG': DentalRadiograph.objects.filter(image_type='OPG').count(),
+        'CBCT': DentalRadiograph.objects.filter(image_type='CBCT').count(),
+        'INTRAORAL_PHOTO': DentalRadiograph.objects.filter(image_type='INTRAORAL_PHOTO').count(),
+        'SMILE_PHOTO': DentalRadiograph.objects.filter(image_type='SMILE_PHOTO').count(),
+    }
+
+    return render(request, 'emr/radiograph_hub.html', {
+        'radiographs': radiographs,
+        'type_filter': type_filter,
+        'query': query,
+        'all_patients': all_patients,
+        'type_counts': type_counts,
+        'image_types': DentalRadiograph.TYPE_CHOICES,
+    })
+
+
+@login_required
+def radiograph_general_upload(request):
+    """
+    General radiograph & dental camera uploader from web portal or mobile uploader.
+    Securely stores images in media/radiographs/.
+    """
+    if request.method == 'POST':
+        patient_id = request.POST.get('patient_id')
+        if not patient_id:
+            messages.error(request, "Please select a patient for this radiograph.")
+            return redirect('radiograph_hub')
+
+        patient = get_object_or_404(Patient, pk=patient_id)
+        image_file = request.FILES.get('image_file') or request.FILES.get('image')
+        if not image_file:
+            messages.error(request, "No image file provided. Please choose a file or take a camera picture.")
+            return redirect('radiograph_hub')
+
+        image_type = request.POST.get('image_type', 'IOPA')
+        tooth_number = request.POST.get('tooth_number', '').strip()
+        findings = request.POST.get('findings', '').strip()
+
+        dentist = request.user if (request.user.is_dentist() or request.user.is_admin()) else User.objects.filter(role='DENTIST').first() or request.user
+
+        rad = DentalRadiograph.objects.create(
+            patient=patient,
+            dentist=dentist,
+            image_file=image_file,
+            image_type=image_type,
+            tooth_number=tooth_number or 'General Oral View',
+            findings=findings or 'Uploaded via RK Hospital Web Radiology Studio'
+        )
+        messages.success(request, f"✓ Dental radiograph '{rad.get_image_type_display()}' uploaded and attached to {patient.full_name} ({patient.mrn})!")
+        
+        redirect_to = request.POST.get('redirect_to')
+        if redirect_to == 'patient':
+            return redirect(f"/patients/{patient.id}/?tab=radiographs")
+        elif redirect_to == 'mobile':
+            return redirect('mobile_companion')
+        return redirect('radiograph_hub')
+
+    return redirect('radiograph_hub')
+
 

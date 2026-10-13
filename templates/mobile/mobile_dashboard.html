@@ -410,19 +410,19 @@
       <div class="action-name">New Patient</div>
     </div>
 
+    <div class="action-card" onclick="haptic(); openSheet('appointmentsSheet')">
+      <div class="action-icon" style="background: rgba(56, 189, 248, 0.15); color: #0284c7;">📅</div>
+      <div class="action-name">Book Appt</div>
+    </div>
+
     <div class="action-card" onclick="haptic(); openSheet('cameraXraySheet')">
       <div class="action-icon" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">📸</div>
       <div class="action-name">Camera X-Ray</div>
     </div>
 
-    <div class="action-card" onclick="haptic(); openSheet('odontogramSheet')">
-      <div class="action-icon" style="background: rgba(139, 92, 246, 0.15); color: #a78bfa;">🦷</div>
-      <div class="action-name">32-Teeth Chart</div>
-    </div>
-
-    <div class="action-card" onclick="haptic(); openSheet('quickConsentSheet')">
-      <div class="action-icon" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">✍️</div>
-      <div class="action-name">Touch Sign</div>
+    <div class="action-card" onclick="haptic(); openSheet('emergencySosSheet')">
+      <div class="action-icon" style="background: rgba(239, 68, 68, 0.18); color: #f87171;">🚨</div>
+      <div class="action-name">Emergency SOS</div>
     </div>
 
     <div class="action-card" onclick="haptic(); openSheet('quickWhatsAppSheet')">
@@ -430,9 +430,9 @@
       <div class="action-name">WhatsApp</div>
     </div>
 
-    <div class="action-card" onclick="haptic(); openSheet('quickBillingSheet')">
-      <div class="action-icon" style="background: rgba(236, 72, 153, 0.15); color: #f472b6;">💰</div>
-      <div class="action-name">Quick Bill</div>
+    <div class="action-card" onclick="haptic(); openSheet('odontogramSheet')">
+      <div class="action-icon" style="background: rgba(139, 92, 246, 0.15); color: #a78bfa;">🦷</div>
+      <div class="action-name">32-Teeth Chart</div>
     </div>
   </div>
 
@@ -605,25 +605,21 @@
 
   <!-- Native Bottom Dock -->
   <nav class="mobile-bottom-dock">
-    <div class="dock-tab active" onclick="haptic(); scrollSection('chairsSection')">
-      <span class="dock-tab-icon">💺</span>
-      <span>Chairs</span>
+    <div class="dock-tab active" onclick="haptic(); window.scrollTo({top:0, behavior:'smooth'});">
+      <span class="dock-tab-icon">🏠</span>
+      <span>Portal Home</span>
     </div>
-    <div class="dock-tab" onclick="haptic(); openSheet('odontogramSheet')">
-      <span class="dock-tab-icon" style="color: #a78bfa;">🦷</span>
-      <span style="color: #a78bfa;">Teeth</span>
+    <div class="dock-tab" onclick="haptic(); openSheet('appointmentsSheet')">
+      <span class="dock-tab-icon" style="color: #38bdf8;">📅</span>
+      <span style="color: #38bdf8;">Appointments</span>
     </div>
     <div class="dock-tab" onclick="haptic(); openSheet('cameraXraySheet')">
       <span class="dock-tab-icon" style="color: #34d399;">📸</span>
-      <span style="color: #34d399;">X-Ray</span>
+      <span style="color: #34d399;">X-Ray Upload</span>
     </div>
-    <div class="dock-tab" onclick="haptic(); scrollSection('patientsSection')">
-      <span class="dock-tab-icon">👥</span>
-      <span>Patients</span>
-    </div>
-    <div class="dock-tab" onclick="haptic(); openSheet('quickBillingSheet')">
-      <span class="dock-tab-icon" style="color: #f472b6;">💰</span>
-      <span style="color: #f472b6;">Billing</span>
+    <div class="dock-tab" onclick="haptic(); openSheet('emergencySosSheet')">
+      <span class="dock-tab-icon" style="color: #f87171;">🚨</span>
+      <span style="color: #f87171;">Emergency SOS</span>
     </div>
   </nav>
 
@@ -884,6 +880,123 @@
     </div>
   </div>
 
+  <!-- SHEET 7: Instant Appointments Booking Modal -->
+  <div id="appointmentsSheet" class="bottom-sheet" onclick="if(event.target===this)closeSheets()">
+    <div class="sheet-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="font-size: 1.15rem; font-weight: 800; color: #ffffff; margin: 0; display: flex; align-items: center; gap: 8px;">
+          📅 Book Dental Appointment
+        </h3>
+        <button onclick="closeSheets()" style="background:none; border:none; color:#94a3b8; font-size:1.4rem;">✕</button>
+      </div>
+      <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 14px;">
+        Schedule an appointment instantly. Directly syncs with 4 operatory chairs and REST API.
+      </p>
+
+      <div id="apptFeedbackBox" style="display: none; padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; font-size: 0.82rem; font-weight: 600;"></div>
+
+      <form id="mobileApptForm" onsubmit="submitMobileAppt(event)">
+        {% csrf_token %}
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label class="form-label" style="color: #cbd5e1; font-size: 0.8rem;">Patient *</label>
+          <select id="apptPatientSelect" class="form-select" required style="background: #1e293b; color: #ffffff; border-color: #334155; padding: 9px;">
+            <option value="" disabled selected>Select registered patient...</option>
+            {% for p in all_patients %}
+              <option value="{{ p.full_name }}" data-id="{{ p.id }}" data-phone="{{ p.phone }}">{{ p.full_name }} ({{ p.mrn }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label class="form-label" style="color: #cbd5e1; font-size: 0.8rem;">Procedure / Treatment Reason *</label>
+          <input type="text" id="apptProcedureInput" class="form-input" placeholder="e.g. Root Canal Sitting 1, Scaling, Aligner Checkup" required style="background: #1e293b; color: #ffffff; border-color: #334155; padding: 9px;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-bottom: 12px;">
+          <div class="form-group">
+            <label class="form-label" style="color: #cbd5e1; font-size: 0.8rem;">Date *</label>
+            <input type="date" id="apptDateInput" class="form-input" value="{{ today|date:'Y-m-d' }}" required style="background: #1e293b; color: #ffffff; border-color: #334155; padding: 9px;">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="color: #cbd5e1; font-size: 0.8rem;">Time Slot *</label>
+            <input type="time" id="apptTimeInput" class="form-input" value="10:00" required style="background: #1e293b; color: #ffffff; border-color: #334155; padding: 9px;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+          <div class="form-group">
+            <label class="form-label" style="color: #cbd5e1; font-size: 0.8rem;">Dental Chair</label>
+            <select id="apptChairSelect" class="form-select" style="background: #1e293b; color: #ffffff; border-color: #334155; padding: 9px;">
+              {% for op in operatories %}
+                <option value="{{ op.id }}">Chair {{ op.chair_number }} ({{ op.specialty_focus|truncatechars:18 }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="color: #cbd5e1; font-size: 0.8rem;">Dentist / Specialist</label>
+            <select id="apptDentistSelect" class="form-select" style="background: #1e293b; color: #ffffff; border-color: #334155; padding: 9px;">
+              {% for d in dentists %}
+                <option value="{{ d.id }}">Dr. {{ d.get_full_name|default:d.username }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" id="btnSubmitAppt" class="btn btn-primary" style="width: 100%; padding: 13px; font-weight: 800; font-size: 0.95rem; background: #0284c7; border-color: #0284c7; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);">
+          📅 Confirm & Book Appointment
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- SHEET 8: Emergency SOS & Immediate Contact Sheet -->
+  <div id="emergencySosSheet" class="bottom-sheet" onclick="if(event.target===this)closeSheets()">
+    <div class="sheet-card" style="background: #0f172a; border-top: 2px solid #ef4444;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.5rem;">🚨</span>
+          <div>
+            <h3 style="font-size: 1.15rem; font-weight: 900; color: #f87171; margin: 0;">
+              EMERGENCY DENTAL SOS
+            </h3>
+            <span style="font-size: 0.72rem; color: #94a3b8; font-weight: 600;">24/7 Acute Pain & Maxillofacial Trauma</span>
+          </div>
+        </div>
+        <button onclick="closeSheets()" style="background:none; border:none; color:#94a3b8; font-size:1.4rem;">✕</button>
+      </div>
+
+      <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 12px 14px; margin-bottom: 16px;">
+        <div style="font-size: 0.82rem; font-weight: 700; color: #fca5a5; margin-bottom: 2px;">
+          For Acute Toothache, Trauma, Uncontrolled Bleeding or Facial Swelling:
+        </div>
+        <div style="font-size: 0.75rem; color: #cbd5e1; line-height: 1.4;">
+          Our hospital trauma surgical team is on call 24 hours. Tap below to connect instantly.
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <!-- Emergency Surgeon Line -->
+        <a href="tel:+919822011223" class="btn" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: #ffffff; padding: 14px; border-radius: 14px; font-weight: 800; font-size: 0.95rem; justify-content: center; box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);">
+          📞 Call Chief Surgeon: +91 98220 11223
+        </a>
+
+        <!-- Reception Hotline -->
+        <a href="tel:07122589000" class="btn" style="background: #1e293b; border: 1px solid #334155; color: #ffffff; padding: 12px; border-radius: 14px; font-weight: 700; font-size: 0.9rem; justify-content: center;">
+          ☎️ Hospital Reception Desk: 0712-2589000
+        </a>
+
+        <!-- 24/7 Dental Emergency WhatsApp -->
+        <a href="https://wa.me/919822011223?text=EMERGENCY:%20Need%20urgent%20dental%20attention%20at%20RK%20Hospital%20Bawaskar" target="_blank" class="btn" style="background: #059669; border: 1px solid #047857; color: #ffffff; padding: 12px; border-radius: 14px; font-weight: 700; font-size: 0.9rem; justify-content: center;">
+          📲 24/7 Emergency WhatsApp Chat
+        </a>
+      </div>
+
+      <div style="margin-top: 14px; text-align: center; font-size: 0.72rem; color: #64748b;">
+        📍 RK Hospital Bawaskar • Nagpur Road Centre • Open All Days
+      </div>
+    </div>
+  </div>
+
   <!-- Client-Side Scripts -->
   <script>
     function haptic() {
@@ -937,6 +1050,70 @@
         return;
       }
       window.location.href = '/patients/' + patientId + '/?tab=chart';
+    }
+
+    async function submitMobileAppt(event) {
+      event.preventDefault();
+      haptic();
+      const patientSelect = document.getElementById('apptPatientSelect');
+      const patientName = patientSelect.value;
+      const selectedOption = patientSelect.options[patientSelect.selectedIndex];
+      const phone = selectedOption ? (selectedOption.getAttribute('data-phone') || '') : '';
+      const procedure = document.getElementById('apptProcedureInput').value;
+      const date = document.getElementById('apptDateInput').value;
+      const time = document.getElementById('apptTimeInput').value;
+      const chairId = document.getElementById('apptChairSelect').value;
+      const dentistId = document.getElementById('apptDentistSelect').value;
+      const feedback = document.getElementById('apptFeedbackBox');
+      const btn = document.getElementById('btnSubmitAppt');
+
+      btn.disabled = true;
+      btn.innerText = 'Booking Appointment...';
+
+      try {
+        const res = await fetch('/api/v1/appointments/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            patient_name: patientName,
+            phone: phone,
+            procedure: procedure,
+            date: date + ' ' + time,
+            chair_id: chairId,
+            dentist_id: dentistId
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          feedback.style.display = 'block';
+          feedback.style.background = '#064e3b';
+          feedback.style.color = '#6ee7b7';
+          feedback.style.border = '1px solid #047857';
+          feedback.innerText = '✓ ' + data.message + ' (' + data.appointment.patient_name + ' at ' + data.appointment.start_time + ')';
+          setTimeout(() => {
+            closeSheets();
+            window.location.reload();
+          }, 1200);
+        } else {
+          feedback.style.display = 'block';
+          feedback.style.background = '#450a0a';
+          feedback.style.color = '#fca5a5';
+          feedback.style.border = '1px solid #7f1d1d';
+          feedback.innerText = 'Booking failed: ' + (data.error || 'Server error');
+        }
+      } catch (err) {
+        feedback.style.display = 'block';
+        feedback.style.background = '#450a0a';
+        feedback.style.color = '#fca5a5';
+        feedback.style.border = '1px solid #7f1d1d';
+        feedback.innerText = 'Connection error: ' + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.innerText = '📅 Confirm & Book Appointment';
+      }
     }
 
     // Register PWA Service Worker for offline performance

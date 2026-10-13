@@ -52,7 +52,9 @@ urlpatterns = [
     path('inventory/new/', views.inventory_create, name='inventory_create'),
     path('inventory/<int:pk>/stock-adjust/', views.inventory_stock_adjust, name='inventory_stock_adjust'),
 
-    # Radiographs
+    # Radiographs & Radiology Hub
+    path('radiographs/', views.radiograph_hub, name='radiograph_hub'),
+    path('radiographs/upload/', views.radiograph_general_upload, name='radiograph_general_upload'),
     path('patients/<int:patient_id>/radiographs/upload/', views.radiograph_upload, name='radiograph_upload'),
 
     # Digital Informed Consent Forms
@@ -78,4 +80,8 @@ urlpatterns = [
     # OPD Kiosk & Patient Self Check-in
     path('kiosk/', views.kiosk_self_checkin, name='kiosk_self_checkin'),
     path('kiosk/poster/', views.kiosk_qr_poster, name='kiosk_qr_poster'),
+
+    # REST API v1 Endpoints (Android App / Flutter / Web Clients)
+    path('api/v1/appointments/', views.api_v1_appointments, name='api_v1_appointments'),
+    path('api/v1/appointments/<int:pk>/', views.api_v1_appointment_detail, name='api_v1_appointment_detail'),
 ]

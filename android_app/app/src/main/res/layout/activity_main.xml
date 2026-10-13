@@ -5,11 +5,217 @@
     android:layout_height="match_parent"
     android:background="@color/background_dark">
 
+    <!-- Professional Medical Top App Bar -->
+    <LinearLayout
+        android:id="@+id/hospitalHeader"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_alignParentTop="true"
+        android:background="@color/card_dark"
+        android:elevation="6dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp">
+
+        <!-- Logo / Icon -->
+        <FrameLayout
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_marginEnd="12dp">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/progress_gradient" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="🦷"
+                android:textSize="22sp" />
+        </FrameLayout>
+
+        <!-- Title & Tagline -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/hospital_full_name"
+                android:textColor="@color/text_light"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tagline"
+                android:textColor="@color/primary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Header Action Buttons -->
+        <ImageButton
+            android:id="@+id/btnHeaderCall"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Call Doctor"
+            android:src="@android:drawable/ic_menu_call"
+            app:tint="@color/primary" />
+
+        <ImageButton
+            android:id="@+id/btnHeaderRefresh"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Refresh"
+            android:src="@android:drawable/ic_menu_rotate"
+            app:tint="@color/text_light" />
+
+    </LinearLayout>
+
+    <!-- Top Horizontal Progress Bar -->
+    <ProgressBar
+        android:id="@+id/loadingProgressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:layout_below="@id/hospitalHeader"
+        android:progressDrawable="@drawable/progress_gradient"
+        android:visibility="gone" />
+
+    <!-- Professional Medical Bottom Navigation Bar -->
+    <LinearLayout
+        android:id="@+id/hospitalBottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_alignParentBottom="true"
+        android:background="@color/card_dark"
+        android:elevation="8dp"
+        android:orientation="horizontal"
+        android:weightSum="4">
+
+        <!-- Tab 1: Portal Home -->
+        <LinearLayout
+            android:id="@+id/navTabPortal"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🌐"
+                android:textSize="18sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Portal"
+                android:textColor="@color/primary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Tab 2: Appointments -->
+        <LinearLayout
+            android:id="@+id/navTabAppointments"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📅"
+                android:textSize="18sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Appointments"
+                android:textColor="@color/text_muted"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- Tab 3: X-Ray & Radiographs -->
+        <LinearLayout
+            android:id="@+id/navTabXRay"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🦷"
+                android:textSize="18sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="X-Ray / Cam"
+                android:textColor="@color/text_muted"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- Tab 4: Emergency SOS -->
+        <LinearLayout
+            android:id="@+id/navTabEmergency"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🚨"
+                android:textSize="18sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Emergency"
+                android:textColor="#f87171"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+    </LinearLayout>
+
     <!-- Native Pull-to-Refresh Container -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_above="@id/hospitalBottomBar"
+        android:layout_below="@id/hospitalHeader">
 
         <WebView
             android:id="@+id/hospitalWebView"
@@ -19,60 +225,52 @@
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-    <!-- Top Horizontal Progress Bar -->
-    <ProgressBar
-        android:id="@+id/loadingProgressBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="3dp"
-        android:layout_alignParentTop="true"
-        android:progressDrawable="@drawable/progress_gradient"
-        android:visibility="gone" />
-
     <!-- Offline State Screen (Shown if Wi-Fi/4G drops) -->
     <LinearLayout
         android:id="@+id/offlineContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_above="@id/hospitalBottomBar"
+        android:layout_below="@id/hospitalHeader"
+        android:background="@color/background_dark"
         android:gravity="center"
         android:orientation="vertical"
         android:padding="32dp"
-        android:visibility="gone"
-        android:background="@color/background_dark">
+        android:visibility="gone">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
             android:text="🦷"
-            android:textSize="54sp"
-            android:layout_marginBottom="16dp" />
+            android:textSize="54sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
             android:text="@string/hospital_full_name"
             android:textColor="@color/text_light"
             android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="4dp" />
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
             android:text="@string/offline_title"
             android:textColor="#f87171"
             android:textSize="15sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
             android:gravity="center"
             android:text="@string/offline_message"
             android:textColor="@color/text_muted"
-            android:textSize="13sp"
-            android:layout_marginBottom="24dp" />
+            android:textSize="13sp" />
 
         <Button
             android:id="@+id/btnRetryConnection"

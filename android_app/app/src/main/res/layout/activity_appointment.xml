@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_dark"
+    android:orientation="vertical">
+
+    <!-- App Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@color/card_dark"
+        android:elevation="4dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="📅 Patient Appointments"
+            android:textColor="@color/text_light"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnNewAppointment"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:backgroundTint="@color/primary"
+            android:text="+ Book New"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <!-- Loading / Content -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp">
+
+        <!-- Appointments ListView / RecyclerView representation -->
+        <ListView
+            android:id="@+id/listViewAppointments"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="8dp" />
+
+        <ProgressBar
+            android:id="@+id/progressBarAppointments"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminateTint="@color/primary" />
+
+        <TextView
+            android:id="@+id/tvEmptyAppointments"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="No appointments found.\nTap '+ Book New' to schedule."
+            android:textColor="@color/text_muted"
+            android:gravity="center"
+            android:textSize="14sp"
+            android:visibility="gone" />
+    </FrameLayout>
+
+</LinearLayout>
