@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% block title %}Consent #{{ consent.id }} - {{ consent.patient.full_name }} - RK Hospital Bawaskar{% endblock %}
+
+{% block extra_head %}
+<style>
+  @media print {
+    body {
+      background: #ffffff !important;
+      font-size: 11pt !important;
+      color: #000000 !important;
+    }
+    .no-print, header, nav, .sidebar, .app-header {
+      display: none !important;
+    }
+    .main-content {
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    .print-card {
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    .page-break {
+      page-break-after: always;
+    }
+  }
+  .cert-container {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+  .cert-header {
+    border-bottom: 2.5px solid var(--primary-600);
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+  }
+  .cert-body-text {
+    white-space: pre-line;
+    line-height: 1.6;
+    color: var(--slate-800);
+    font-size: 0.9rem;
+    background: #fbfcfe;
+    border: 1px solid var(--slate-200);
+    padding: 20px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 24px;
+  }
+  .sig-box {
+    border: 1px solid var(--slate-300);
+    border-radius: 8px;
+    padding: 16px;
+    background: #ffffff;
+    text-align: center;
+  }
+  .sig-image {
+    max-height: 90px;
+    max-width: 260px;
+    display: block;
+    margin: 0 auto 10px;
+    border-bottom: 1px dashed var(--slate-300);
+    padding-bottom: 8px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cert-container">
+  <!-- Action Controls -->
+  <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+    <a href="{% url 'patient_detail' consent.patient.id %}?tab=consents" class="btn btn-secondary btn-sm">
+      ← Back to Patient EMR
+    </a>
+    <div style="display: flex; gap: 10px;">
+      <a href="{% url 'whatsapp_send' consent.patient.id %}?type=APPT_CONFIRM" class="btn btn-secondary btn-sm" style="color: #047857;">
+        📲 WhatsApp Notification
+      </a>
+      <button onclick="window.print()" class="btn btn-primary btn-sm">
+        🖨️ Print Consent Certificate
+      </button>
+    </div>
+  </div>
+
+  <!-- Formal Hospital Document Card -->
+  <div class="card print-card" style="padding: 40px; background: #ffffff;">
+    <!-- Hospital Letterhead -->
+    <div class="cert-header">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--slate-900); margin: 0 0 2px; line-height: 1.15;">
+            RK HOSPITAL BAWASKAR
+          </h1>
+          <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-600); letter-spacing: 0.04em;">
+            CENTRE OF ADVANCED DENTAL SURGERY & IMPLANTOLOGY
+          </div>
+          <div style="font-size: 0.75rem; color: var(--slate-500); margin-top: 4px;">
+            Nagpur Road Main Hospital Campus • 📞 +91 98220 11223 • Emergency: 24/7 Dental Trauma Care
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <span class="badge" style="background: #ecfdf5; color: #047857; font-size: 0.85rem; font-weight: 700; padding: 6px 12px; border: 1px solid #a7f3d0;">
+            ✓ VERIFIED LEGAL RECORD
+          </span>
+          <div style="font-size: 0.75rem; color: var(--slate-400); margin-top: 6px;">
+            Document ID: #CONS-{{ consent.id|stringformat:"05d" }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Title of Document -->
+    <div style="text-align: center; margin-bottom: 24px;">
+      <h2 style="font-size: 1.15rem; font-weight: 800; color: var(--slate-900); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 4px;">
+        {{ consent.title }}
+      </h2>
+      <div style="font-size: 0.8rem; color: var(--slate-500);">
+        Official Informed Consent & Medico-Legal Authorization
+      </div>
+    </div>
+
+    <!-- Patient & Clinical Particulars Box -->
+    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; padding: 14px 18px; background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-sm); margin-bottom: 24px; font-size: 0.85rem;">
+      <div>
+        Patient: <b>{{ consent.patient.full_name }}</b> (MRN: <b>{{ consent.patient.mrn }}</b>)<br>
+        <span style="font-size: 0.78rem; color: var(--slate-600);">Phone: {{ consent.patient.phone|default:"N/A" }}</span>
+      </div>
+      <div>
+        Age / Gender: <b>{{ consent.patient.age|default:"--" }} Yrs / {{ consent.patient.get_gender_display }}</b><br>
+        {% if consent.tooth_number %}
+          Tooth / Site: <b>{{ consent.tooth_number }}</b>
+        {% else %}
+          Site: <b>General / Oral Cavity</b>
+        {% endif %}
+      </div>
+      <div style="text-align: right;">
+        Date: <b>{{ consent.signed_at|date:"d M Y, h:i A"|default:consent.created_at|date:"d M Y" }}</b><br>
+        Category: <b>{{ consent.get_procedure_type_display }}</b>
+      </div>
+    </div>
+
+    <!-- Medical Alerts Warning if present -->
+    {% if consent.patient.get_active_medical_alerts %}
+    <div style="margin-bottom: 20px; padding: 10px 14px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 6px; font-size: 0.8rem; color: #be123c;">
+      <b>⚠️ DISCLOSED SYSTEMIC ALERTS & ALLERGIES:</b>
+      {% for a in consent.patient.get_active_medical_alerts %}{{ a }}{% if not forloop.last %}, {% endif %}{% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Clinical Consent Body -->
+    <div class="cert-body-text">{{ consent.consent_body }}</div>
+
+    <!-- Signatures Grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 30px;">
+      <!-- Patient / Signatory Box -->
+      <div class="sig-box">
+        <div style="font-size: 0.8rem; font-weight: 700; color: var(--slate-700); margin-bottom: 8px; text-transform: uppercase;">
+          Patient / Guardian Signature
+        </div>
+        {% if consent.patient_signature_data %}
+          <img src="{{ consent.patient_signature_data }}" alt="Patient Signature" class="sig-image">
+        {% else %}
+          <div style="height: 60px; border-bottom: 1px dashed #94a3b8; margin-bottom: 10px;"></div>
+        {% endif %}
+        <div style="font-size: 0.9rem; font-weight: 700; color: var(--slate-900);">
+          {{ consent.signed_by_name|default:consent.patient.full_name }}
+        </div>
+        <div style="font-size: 0.75rem; color: var(--slate-500);">
+          Relationship: {{ consent.relationship_to_patient|default:"Self" }}
+        </div>
+        <div style="font-size: 0.72rem; color: #059669; margin-top: 4px; font-weight: 600;">
+          ✓ Electronic Touch Signature Recorded ({{ consent.signed_at|date:"d M Y, h:i A" }})
+        </div>
+      </div>
+
+      <!-- Attending Dental Surgeon / Witness Box -->
+      <div class="sig-box">
+        <div style="font-size: 0.8rem; font-weight: 700; color: var(--slate-700); margin-bottom: 8px; text-transform: uppercase;">
+          Attending Dental Surgeon / Witness
+        </div>
+        <div style="height: 60px; display: flex; align-items: center; justify-content: center; border-bottom: 1px dashed var(--slate-300); margin-bottom: 10px;">
+          <span style="font-family: cursive; font-size: 1.3rem; color: var(--primary-700);">
+            Dr. {{ consent.dentist.get_full_name|default:"Anurag Bawaskar" }}
+          </span>
+        </div>
+        <div style="font-size: 0.9rem; font-weight: 700; color: var(--slate-900);">
+          {{ consent.witness_name|default:"Attending Dental Specialist" }}
+        </div>
+        <div style="font-size: 0.75rem; color: var(--slate-500);">
+          Department of Dental Surgery & Oral Care
+        </div>
+        <div style="font-size: 0.72rem; color: var(--slate-500); margin-top: 4px;">
+          RK Hospital Bawaskar
+        </div>
+      </div>
+    </div>
+
+    <!-- Document Footer -->
+    <div style="margin-top: 40px; padding-top: 14px; border-top: 1px solid var(--slate-200); font-size: 0.72rem; color: var(--slate-400); display: flex; justify-content: space-between; align-items: center;">
+      <span>Stored securely in RK Hospital Bawaskar Dental EMR System</span>
+      <span>Page 1 of 1 • Medico-Legal Informed Consent</span>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,395 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} - RK Hospital Bawaskar{% endblock %}
+
+{% block extra_head %}
+<style>
+  .consent-builder {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .procedure-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .proc-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 1px solid var(--slate-300);
+    background: #ffffff;
+    color: var(--slate-700);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .proc-chip:hover, .proc-chip.active {
+    background: var(--primary-600);
+    color: #ffffff;
+    border-color: var(--primary-600);
+    box-shadow: 0 2px 6px rgba(13, 148, 136, 0.25);
+  }
+  .sig-pad-container {
+    border: 2px dashed var(--slate-300);
+    border-radius: var(--radius-md);
+    background: #fbfcfe;
+    padding: 16px;
+    text-align: center;
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .sig-pad-container.signed {
+    border-color: #10b981;
+    background: #f0fdf4;
+  }
+  #signatureCanvas {
+    background: #ffffff;
+    border: 1px solid var(--slate-200);
+    border-radius: 8px;
+    touch-action: none;
+    cursor: crosshair;
+    display: block;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 580px;
+    height: 180px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .sig-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    max-width: 580px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .legal-box {
+    background: #f8fafc;
+    border: 1px solid var(--slate-200);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    font-size: 0.82rem;
+    color: var(--slate-600);
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="consent-builder">
+  <!-- Header Navigation -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+    <div>
+      <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary-600); text-transform: uppercase; letter-spacing: 0.05em;">
+        Clinical Legal Documentation
+      </div>
+      <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--slate-900); margin: 2px 0 0;">
+        Paperless Informed Consent Form
+      </h1>
+      <p style="color: var(--slate-500); font-size: 0.85rem; margin: 0;">
+        Patient: <b>{{ patient.full_name }}</b> (MRN: <b>{{ patient.mrn }}</b>) • Age/Sex: {{ patient.age|default:"--" }} Yrs / {{ patient.get_gender_display }}
+      </p>
+    </div>
+    <a href="{% url 'patient_detail' patient.id %}?tab=consents" class="btn btn-secondary btn-sm">
+      ← Back to Patient EMR
+    </a>
+  </div>
+
+  <!-- Patient Medical Alert Banner (if any) -->
+  {% if patient.get_active_medical_alerts %}
+  <div style="margin-bottom: 20px; padding: 10px 14px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; font-size: 0.85rem; color: #be123c; display: flex; align-items: center; gap: 10px;">
+    <span style="font-size: 1.2rem;">⚠️</span>
+    <div>
+      <b>HIGH-RISK CLINICAL ALERTS ON FILE:</b>
+      {% for alert in patient.get_active_medical_alerts %}
+        <span class="badge" style="background:#fee2e2; color:#991b1b; margin-left: 4px;">{{ alert }}</span>
+      {% endfor %}
+      <div style="font-size: 0.75rem; color: #9f1239; margin-top: 2px;">Ensure patient has provided full disclosure of medications & systemic health conditions.</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Quick Select Chips for Procedures -->
+  <div class="card" style="margin-bottom: 20px; padding: 16px 20px;">
+    <div style="font-size: 0.82rem; font-weight: 700; color: var(--slate-700); margin-bottom: 8px;">
+      ⚡ 1-Tap Select Clinical Procedure Template:
+    </div>
+    <div class="procedure-chips">
+      <button type="button" class="proc-chip" onclick="applyTemplate('IMPLANT')">🔩 Dental Implants & Bone Graft</button>
+      <button type="button" class="proc-chip" onclick="applyTemplate('RCT')">🦷 Root Canal Therapy (RCT)</button>
+      <button type="button" class="proc-chip" onclick="applyTemplate('EXTRACTION')">🪓 Surgical Extraction & Wisdom Tooth</button>
+      <button type="button" class="proc-chip" onclick="applyTemplate('ANESTHESIA')">💉 Local Anesthesia & Block</button>
+      <button type="button" class="proc-chip" onclick="applyTemplate('ORTHODONTIC')">✨ Orthodontics / Braces / Aligners</button>
+      <button type="button" class="proc-chip" onclick="applyTemplate('CROWN_BRIDGE')">👑 Crown, Bridge & Prosthetics</button>
+      <button type="button" class="proc-chip" onclick="applyTemplate('GENERAL')">📋 General Dental Informed Consent</button>
+    </div>
+  </div>
+
+  <!-- Form Body -->
+  <form method="POST" id="consentForm" onsubmit="return validateAndSubmitConsent()">
+    {% csrf_token %}
+    {{ form.patient_signature_data }}
+
+    <div class="card" style="margin-bottom: 20px; padding: 24px;">
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--slate-900); margin-bottom: 16px; border-bottom: 1px solid var(--slate-100); padding-bottom: 8px;">
+        1. Procedure Details & Anatomical Location
+      </h3>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="form-group">
+          <label class="form-label">Procedure Category *</label>
+          {{ form.procedure_type }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tooth Number / Quadrant (Optional)</label>
+          {{ form.tooth_number }}
+          <span style="font-size: 0.72rem; color: var(--slate-500);">e.g. Tooth #36 (Lower Left 1st Molar) or Upper Arch</span>
+        </div>
+        <div class="form-group" style="grid-column: span 2;">
+          <label class="form-label">Consent Title / Description *</label>
+          {{ form.title }}
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <label class="form-label" style="margin: 0;">Full Clinical Disclosures, Risks & Terms *</label>
+          <span style="font-size: 0.75rem; color: var(--slate-500);">Editable text — customize per clinical case</span>
+        </div>
+        {{ form.consent_body }}
+      </div>
+    </div>
+
+    <!-- Signatory & Witness Details -->
+    <div class="card" style="margin-bottom: 20px; padding: 24px;">
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--slate-900); margin-bottom: 16px; border-bottom: 1px solid var(--slate-100); padding-bottom: 8px;">
+        2. Signatory & Witness Information
+      </h3>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+        <div class="form-group">
+          <label class="form-label">Signatory Full Name *</label>
+          {{ form.signed_by_name }}
+          <span style="font-size: 0.72rem; color: var(--slate-500);">Patient or legal guardian</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Relationship to Patient</label>
+          {{ form.relationship_to_patient }}
+          <span style="font-size: 0.72rem; color: var(--slate-500);">e.g. Self, Father, Mother, Spouse</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Witness / Attending Doctor</label>
+          {{ form.witness_name }}
+          <span style="font-size: 0.72rem; color: var(--slate-500);">Dental Surgeon / Clinic Staff</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Digital Touch / Stylus Signature Pad -->
+    <div class="card" style="margin-bottom: 24px; padding: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--slate-900); margin: 0;">
+          3. Patient Touch / Stylus Digital Signature *
+        </h3>
+        <span id="sigBadge" class="badge" style="background: #fef3c7; color: #92400e; font-size: 0.75rem;">
+          ✍️ Awaiting Touch Signature
+        </span>
+      </div>
+
+      <div class="legal-box">
+        By providing an electronic signature below, I acknowledge that I have read (or had explained to me in my preferred language) the clinical procedure, associated risks, and alternatives. I have had the opportunity to ask questions, and all my questions have been answered satisfactorily.
+      </div>
+
+      <div class="sig-pad-container" id="sigContainer">
+        <canvas id="signatureCanvas" width="580" height="180"></canvas>
+        <div class="sig-controls">
+          <span style="font-size: 0.75rem; color: var(--slate-500);">
+            📱 Use your finger or stylus pen on mobile/iPad screen, or mouse on desktop
+          </span>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="clearSignature()">
+            🔄 Clear & Redo Signature
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 40px;">
+      <a href="{% url 'patient_detail' patient.id %}?tab=consents" class="btn btn-secondary">
+        Cancel
+      </a>
+      <button type="submit" class="btn btn-primary" id="submitBtn" style="padding: 10px 24px; font-weight: 700;">
+        ✍️ Sign & Store Informed Consent in EMR
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Safe JSON Script for Templates -->
+{{ templates_json|json_script:"consent-templates-data" }}
+
+<script>
+  // Load templates safely
+  const templatesData = JSON.parse(document.getElementById('consent-templates-data').textContent);
+
+  function applyTemplate(procKey) {
+    const sel = document.getElementById('id_procedure_type');
+    if (sel) {
+      sel.value = procKey;
+      loadConsentTemplate(procKey);
+    }
+    // Highlight chip
+    document.querySelectorAll('.proc-chip').forEach(c => c.classList.remove('active'));
+    if (event && event.target) {
+      event.target.classList.add('active');
+    }
+  }
+
+  function loadConsentTemplate(procKey) {
+    if (!templatesData || !templatesData[procKey]) return;
+    const tpl = templatesData[procKey];
+    const titleInput = document.getElementById('id_title');
+    const bodyInput = document.getElementById('id_consent_body');
+    if (titleInput) titleInput.value = tpl.title;
+    if (bodyInput) bodyInput.value = tpl.body;
+  }
+
+  // Prepopulate signed_by_name if empty
+  document.addEventListener('DOMContentLoaded', function() {
+    const signer = document.getElementById('id_signed_by_name');
+    if (signer && !signer.value.trim()) {
+      signer.value = "{{ patient.full_name|escapejs }}";
+    }
+    const rel = document.getElementById('id_relationship_to_patient');
+    if (rel && !rel.value.trim()) {
+      rel.value = "Self";
+    }
+    const wit = document.getElementById('id_witness_name');
+    if (wit && !wit.value.trim()) {
+      wit.value = "Dr. Bawaskar (Attending Dental Surgeon)";
+    }
+
+    // Initialize Canvas
+    initSignaturePad();
+  });
+
+  // Signature Pad Logic (Touch + Mouse)
+  let canvas, ctx;
+  let isDrawing = false;
+  let hasSigned = false;
+
+  function initSignaturePad() {
+    canvas = document.getElementById('signatureCanvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+
+    // Handle high DPI displays
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = (rect.width || 580) * dpr;
+    canvas.height = (rect.height || 180) * dpr;
+    ctx.scale(dpr, dpr);
+
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // Desktop Mouse Events
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    window.addEventListener('mouseup', stopDrawing);
+
+    // Mobile / Tablet Touch Events
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', stopDrawing);
+    window.addEventListener('touchcancel', stopDrawing);
+  }
+
+  function getCanvasPos(evt) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = evt.clientX !== undefined ? evt.clientX : evt.touches[0].clientX;
+    const clientY = evt.clientY !== undefined ? evt.clientY : evt.touches[0].clientY;
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    };
+  }
+
+  function startDrawing(e) {
+    isDrawing = true;
+    const pos = getCanvasPos(e);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+  }
+
+  function draw(e) {
+    if (!isDrawing) return;
+    const pos = getCanvasPos(e);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+    markSigned();
+  }
+
+  function handleTouchStart(e) {
+    e.preventDefault();
+    startDrawing(e);
+  }
+
+  function handleTouchMove(e) {
+    e.preventDefault();
+    draw(e);
+  }
+
+  function stopDrawing() {
+    if (isDrawing) {
+      isDrawing = false;
+      ctx.closePath();
+    }
+  }
+
+  function markSigned() {
+    if (!hasSigned) {
+      hasSigned = true;
+      const badge = document.getElementById('sigBadge');
+      if (badge) {
+        badge.textContent = '✓ Signature Captured';
+        badge.style.background = '#d1fae5';
+        badge.style.color = '#065f46';
+      }
+      document.getElementById('sigContainer').classList.add('signed');
+    }
+  }
+
+  function clearSignature() {
+    if (!canvas || !ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    ctx.clearRect(0, 0, rect.width, rect.height);
+    hasSigned = false;
+    const badge = document.getElementById('sigBadge');
+    if (badge) {
+      badge.textContent = '✍️ Awaiting Touch Signature';
+      badge.style.background = '#fef3c7';
+      badge.style.color = '#92400e';
+    }
+    document.getElementById('sigContainer').classList.remove('signed');
+    document.getElementById('id_patient_signature_data').value = '';
+  }
+
+  function validateAndSubmitConsent() {
+    if (!hasSigned) {
+      alert("⚠️ Patient Signature is required. Please sign in the box using your finger, stylus, or mouse.");
+      return false;
+    }
+    // Export data URL to hidden field
+    const sigData = canvas.toDataURL('image/png');
+    document.getElementById('id_patient_signature_data').value = sigData;
+    return true;
+  }
+</script>
+{% endblock %}

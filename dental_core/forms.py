@@ -2,7 +2,8 @@ from django import forms
 from .models import (
     User, Patient, Appointment, ClinicalVisit, TreatmentItem,
     DentalLabOrder, DentalRadiograph, Prescription, PrescriptionItem,
-    Invoice, InvoiceItem, Payment, DentalMaterialInventory, ToothRecord
+    Invoice, InvoiceItem, Payment, DentalMaterialInventory, ToothRecord,
+    DentalConsentForm, WhatsAppNotification
 )
 
 
@@ -158,3 +159,30 @@ class InventoryItemForm(forms.ModelForm):
             'supplier_name': forms.TextInput(attrs={'class': 'form-input'}),
             'expiry_date': forms.DateInput(attrs={'class': 'form-input', 'type': 'date'}),
         }
+
+
+class DentalConsentFormForm(forms.ModelForm):
+    class Meta:
+        model = DentalConsentForm
+        fields = [
+            'procedure_type', 'title', 'tooth_number', 'consent_body',
+            'signed_by_name', 'relationship_to_patient', 'witness_name',
+            'patient_signature_data'
+        ]
+        widgets = {
+            'procedure_type': forms.Select(attrs={'class': 'form-select', 'id': 'id_procedure_type', 'onchange': 'loadConsentTemplate(this.value)'}),
+            'title': forms.TextInput(attrs={'class': 'form-input', 'id': 'id_title'}),
+            'tooth_number': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'e.g. #36, #48, Full Mouth'}),
+            'consent_body': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 9, 'id': 'id_consent_body'}),
+            'signed_by_name': forms.TextInput(attrs={'class': 'form-input', 'id': 'id_signed_by_name'}),
+            'relationship_to_patient': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Self, Parent, Spouse, Guardian'}),
+            'witness_name': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Attending Dental Surgeon / Witness'}),
+            'patient_signature_data': forms.HiddenInput(attrs={'id': 'id_patient_signature_data'}),
+        }
+
+
+class WhatsAppMessageForm(forms.Form):
+    recipient_phone = forms.CharField(max_length=20, widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'e.g. +91 98765 43210'}))
+    message_type = forms.ChoiceField(choices=WhatsAppNotification.MESSAGE_TYPES, widget=forms.Select(attrs={'class': 'form-select', 'id': 'id_wa_type', 'onchange': 'loadWhatsAppTemplate(this.value)'}))
+    message_content = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-textarea', 'rows': 6, 'id': 'id_wa_content'}))
+

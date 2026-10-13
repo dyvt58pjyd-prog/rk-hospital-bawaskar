@@ -79,6 +79,9 @@
           <a href="{% url 'patient_detail' appt.patient.id %}?tab=chart" class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 4px 8px;">
             Chart
           </a>
+          <a href="{% url 'whatsapp_send' appt.patient.id %}?type=APPT_REMINDER" target="_blank" class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 4px 8px; color: #047857; border-color: #a7f3d0;" title="Send WhatsApp Appointment Reminder">
+            📲 WA
+          </a>
         </div>
       </div>
       {% empty %}

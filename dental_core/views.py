@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.db import models
+import urllib.parse
 from django.db.models import Q, Sum, Count, F
 from django.utils import timezone
 
@@ -14,12 +15,15 @@ from .models import (
     User, Patient, DentalOperatory, Appointment, ToothRecord,
     ClinicalVisit, ProcedureCatalog, TreatmentItem, DentalLabOrder,
     DentalRadiograph, Prescription, PrescriptionItem, Invoice,
-    InvoiceItem, Payment, DentalMaterialInventory
+    InvoiceItem, Payment, DentalMaterialInventory,
+    DentalConsentForm, WhatsAppNotification
 )
 from .forms import (
     PatientForm, AppointmentForm, ClinicalVisitForm, TreatmentItemForm,
-    DentalLabOrderForm, DentalRadiographForm, InventoryItemForm
+    DentalLabOrderForm, DentalRadiographForm, InventoryItemForm,
+    DentalConsentFormForm, WhatsAppMessageForm
 )
+from .consent_templates import CONSENT_TEMPLATES
 
 
 def login_view(request):
@@ -289,6 +293,10 @@ def patient_detail(request, pk):
     invoices = patient.invoices.all().prefetch_related('items', 'payments')
     # Appointments
     appointments = patient.appointments.all().select_related('dentist', 'chair')
+    # Digital Consent Forms
+    consent_forms = patient.consent_forms.all().select_related('dentist')
+    # WhatsApp message logs
+    whatsapp_messages = patient.whatsapp_messages.all().select_related('sent_by')
 
     # Available dentists for modals
     dentists = User.objects.filter(role__in=['DENTIST', 'ADMIN'])
@@ -318,6 +326,8 @@ def patient_detail(request, pk):
         'radiographs': radiographs,
         'invoices': invoices,
         'appointments': appointments,
+        'consent_forms': consent_forms,
+        'whatsapp_messages': whatsapp_messages,
         'dentists': dentists,
         'operatories': DentalOperatory.objects.filter(is_active=True),
         'procedures': procedures,
@@ -1031,3 +1041,153 @@ def radiograph_upload(request, patient_id):
                 for err in errs:
                     messages.error(request, f"Upload error ({field}): {err}")
     return redirect(f"/patients/{patient.id}/?tab=radiographs")
+
+
+# ==========================================
+# PAPERLESS DIGITAL CONSENT FORMS
+# ==========================================
+
+@login_required
+def consent_create(request, patient_id):
+    patient = get_object_or_404(Patient, pk=patient_id)
+    if request.method == 'POST':
+        form = DentalConsentFormForm(request.POST)
+        if form.is_valid():
+            consent = form.save(commit=False)
+            consent.patient = patient
+            if request.user.is_dentist() or request.user.is_admin():
+                consent.dentist = request.user
+            else:
+                consent.dentist = User.objects.filter(role__in=['DENTIST', 'ADMIN']).first()
+
+            sig_data = request.POST.get('patient_signature_data')
+            if sig_data and len(sig_data) > 100:
+                consent.patient_signature_data = sig_data
+                consent.is_signed = True
+                consent.signed_at = timezone.now()
+
+            consent.save()
+            messages.success(request, f"Informed Consent for '{consent.title}' recorded and signed successfully!")
+            return redirect('consent_detail', consent_id=consent.id)
+        else:
+            for f, errs in form.errors.items():
+                for err in errs:
+                    messages.error(request, f"{f}: {err}")
+    else:
+        proc_type = request.GET.get('type', 'IMPLANT')
+        tpl = CONSENT_TEMPLATES.get(proc_type, CONSENT_TEMPLATES['GENERAL'])
+        form = DentalConsentFormForm(initial={
+            'procedure_type': proc_type,
+            'title': tpl['title'],
+            'consent_body': tpl['body'],
+            'signed_by_name': patient.full_name,
+            'relationship_to_patient': 'Self',
+            'witness_name': request.user.get_full_name() or request.user.username,
+        })
+
+    return render(request, 'consents/consent_form.html', {
+        'patient': patient,
+        'form': form,
+        'templates_json': json.dumps(CONSENT_TEMPLATES),
+    })
+
+
+@login_required
+def consent_detail(request, consent_id):
+    consent = get_object_or_404(
+        DentalConsentForm.objects.select_related('patient', 'dentist'),
+        pk=consent_id
+    )
+    return render(request, 'consents/consent_detail.html', {'consent': consent})
+
+
+@login_required
+def api_consent_template(request):
+    proc_type = request.GET.get('procedure_type', 'GENERAL')
+    tpl = CONSENT_TEMPLATES.get(proc_type, CONSENT_TEMPLATES['GENERAL'])
+    return JsonResponse(tpl)
+
+
+# ==========================================
+# WHATSAPP AUTOMATED CLINICAL NOTIFICATIONS
+# ==========================================
+
+@login_required
+def whatsapp_send(request, patient_id):
+    patient = get_object_or_404(Patient, pk=patient_id)
+    clean_phone = ''.join(ch for ch in (patient.phone or '') if ch.isdigit())
+    if len(clean_phone) == 10:
+        clean_phone = '91' + clean_phone  # Standard Indian country code
+
+    msg_type = request.POST.get('message_type') or request.GET.get('type', 'APPT_CONFIRM')
+    custom_text = request.POST.get('message_content')
+
+    default_texts = {
+        'APPT_CONFIRM': (
+            f"🏥 *RK Hospital Bawaskar - Dental EMR Alert*\n\n"
+            f"Dear {patient.full_name},\n"
+            f"Your dental appointment has been scheduled and confirmed.\n\n"
+            f"📍 *Location:* RK Hospital Bawaskar, Centre of Dental Excellence, Nagpur Road.\n"
+            f"📞 *Hospital Helpdesk:* +91 98220 11223\n\n"
+            f"Please arrive 10 minutes before your scheduled slot. Thank you!"
+        ),
+        'APPT_REMINDER': (
+            f"⏰ *Friendly Appointment Reminder • RK Hospital Bawaskar*\n\n"
+            f"Dear {patient.full_name},\n"
+            f"This is a reminder for your upcoming dental visit with Dr. Bawaskar's clinical team.\n\n"
+            f"If you need to reschedule, kindly notify the desk at +91 98220 11223."
+        ),
+        'POST_OP_EXTRACTION': (
+            f"🦷 *Post-Extraction Care Instructions • RK Hospital Bawaskar*\n\n"
+            f"Dear {patient.full_name},\n"
+            f"Please strictly observe the following post-surgical instructions:\n"
+            f"1. Keep sterile cotton gauze pressed firmly over the socket for 45 minutes.\n"
+            f"2. ❌ DO NOT spit, rinse forcefully, or drink with a straw for 24 hours.\n"
+            f"3. Apply cold ice pack on the cheek in intervals (15 mins on / 15 mins off).\n"
+            f"4. Consume cold/soft foods. Strictly avoid hot or spicy foods.\n"
+            f"5. Take prescribed pain relievers and antibiotics strictly after meals.\n\n"
+            f"🚨 *Emergency Hotline:* +91 98220 11223 (Dr. Bawaskar)"
+        ),
+        'POST_OP_RCT': (
+            f"🦷 *Post-Root Canal Treatment Care • RK Hospital Bawaskar*\n\n"
+            f"Dear {patient.full_name},\n"
+            f"1. Numbness will wear off in 2-3 hours; be careful not to bite your cheek or tongue.\n"
+            f"2. Do NOT chew hard or sticky foods on the treated side until the final crown is fitted.\n"
+            f"3. Mild tenderness for 2-3 days is normal and manageable with prescribed medicine.\n"
+            f"4. Complete your prescribed medication course.\n\n"
+            f"Next step: Permanent crown measurement and shade selection."
+        ),
+        'POST_OP_IMPLANT': (
+            f"🦷 *Post-Dental Implant Care • RK Hospital Bawaskar*\n\n"
+            f"Dear {patient.full_name},\n"
+            f"1. Avoid touching or prodding the surgical site or sutures with your tongue/finger.\n"
+            f"2. Maintain gentle oral hygiene; do not brush aggressively over the implant for 48 hours.\n"
+            f"3. Strictly avoid smoking for at least 7 days to ensure osseointegration.\n"
+            f"4. Suture removal scheduled in 7-10 days."
+        ),
+        'INVOICE_RECEIPT': (
+            f"🧾 *Digital Receipt • RK Hospital Bawaskar*\n\n"
+            f"Dear {patient.full_name},\n"
+            f"Thank you for your visit. Your treatment and payment invoice have been registered in your dental EMR.\n\n"
+            f"RK Hospital Bawaskar • Centre of Dental Excellence"
+        )
+    }
+
+    final_text = custom_text or default_texts.get(msg_type, default_texts['APPT_CONFIRM'])
+    wa_url = f"https://wa.me/{clean_phone}?text={urllib.parse.quote(final_text)}"
+
+    # Record notification log
+    WhatsAppNotification.objects.create(
+        patient=patient,
+        sent_by=request.user,
+        recipient_phone=clean_phone or patient.phone or 'N/A',
+        message_type=msg_type,
+        message_content=final_text,
+        click_to_chat_url=wa_url
+    )
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax') == '1':
+        return JsonResponse({'status': 'ok', 'whatsapp_url': wa_url})
+
+    return redirect(wa_url)
+

@@ -54,4 +54,12 @@ urlpatterns = [
 
     # Radiographs
     path('patients/<int:patient_id>/radiographs/upload/', views.radiograph_upload, name='radiograph_upload'),
+
+    # Digital Informed Consent Forms
+    path('patients/<int:patient_id>/consent/create/', views.consent_create, name='consent_create'),
+    path('consent/<int:consent_id>/', views.consent_detail, name='consent_detail'),
+    path('api/consent-template/', views.api_consent_template, name='api_consent_template'),
+
+    # WhatsApp Notifications
+    path('patients/<int:patient_id>/whatsapp/', views.whatsapp_send, name='whatsapp_send'),
 ]

@@ -543,3 +543,66 @@ class DentalMaterialInventory(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.current_stock} {self.unit})"
+
+
+class DentalConsentForm(models.Model):
+    PROCEDURE_CHOICES = [
+        ('IMPLANT', 'Dental Implant Surgery & Bone Grafting'),
+        ('RCT', 'Root Canal Treatment (Endodontics)'),
+        ('EXTRACTION', 'Surgical Extraction & Wisdom Disimpaction'),
+        ('ANESTHESIA', 'Local Anesthesia & Epinephrine Administration'),
+        ('ORTHODONTIC', 'Orthodontic Brackets & Clear Aligners'),
+        ('CROWN_BRIDGE', 'Prosthetic Crown, Bridge & Aesthetic Veneers'),
+        ('PERIODONTAL', 'Periodontal Flap Surgery & Deep Scaling'),
+        ('GENERAL', 'General Dental Examination & Operative Procedures'),
+    ]
+
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='consent_forms')
+    dentist = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='witnessed_consents')
+    procedure_type = models.CharField(max_length=30, choices=PROCEDURE_CHOICES, default='GENERAL')
+    title = models.CharField(max_length=200)
+    tooth_number = models.CharField(max_length=50, blank=True, null=True, help_text="Specific tooth or teeth (e.g. #36, #48)")
+    consent_body = models.TextField(help_text="Detailed legal and clinical risks explained to patient")
+    
+    # Touch / stylus finger signature stored as base64 PNG data
+    patient_signature_data = models.TextField(blank=True, null=True, help_text="Base64 encoded PNG signature image")
+    signed_by_name = models.CharField(max_length=120, help_text="Patient or Legal Guardian Name")
+    relationship_to_patient = models.CharField(max_length=50, default="Self", help_text="Self, Parent, Spouse, Guardian")
+    witness_name = models.CharField(max_length=120, blank=True, null=True)
+    is_signed = models.BooleanField(default=False)
+    signed_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        status = "Signed" if self.is_signed else "Draft/Pending"
+        return f"{self.get_procedure_type_display()} Consent - {self.patient.full_name} ({status})"
+
+
+class WhatsAppNotification(models.Model):
+    MESSAGE_TYPES = [
+        ('APPT_CONFIRM', 'Appointment Confirmation'),
+        ('APPT_REMINDER', '24h Appointment Reminder'),
+        ('POST_OP_EXTRACTION', 'Post-Op Surgical Extraction Care'),
+        ('POST_OP_RCT', 'Post-Op Root Canal Care'),
+        ('POST_OP_IMPLANT', 'Post-Op Dental Implant Care'),
+        ('INVOICE_RECEIPT', 'Payment Receipt & Invoice Alert'),
+        ('CUSTOM', 'Custom Clinical Message'),
+    ]
+
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='whatsapp_messages')
+    sent_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    recipient_phone = models.CharField(max_length=25)
+    message_type = models.CharField(max_length=30, choices=MESSAGE_TYPES)
+    message_content = models.TextField()
+    click_to_chat_url = models.URLField(max_length=1000, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"WhatsApp {self.get_message_type_display()} to {self.patient.full_name} ({self.created_at.strftime('%Y-%m-%d %H:%M')})"
+
