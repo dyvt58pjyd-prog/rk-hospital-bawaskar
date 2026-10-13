@@ -38,14 +38,32 @@ export default function AdvancedOdontogramApp({
     const loadData = async () => {
       try {
         let chartData = initialData;
+        
+        // 1. Check browser local storage first if offline or on GitHub Pages
         if (!chartData && patientId) {
-          // Fetch from Django API
-          const res = await fetch(`/api/odontogram/${patientId}/state/`);
-          if (res.ok) {
-            const data = await res.json();
-            if (data && data.chart_data && Object.keys(data.chart_data).length > 0) {
-              chartData = data.chart_data;
+          try {
+            const localSaved = localStorage.getItem(`rk_odontogram_${patientId}`);
+            if (localSaved) {
+              chartData = JSON.parse(localSaved);
             }
+          } catch (e) {
+            console.warn('LocalStorage read error:', e);
+          }
+        }
+
+        // 2. Fetch from Django API if available
+        if (!chartData && patientId) {
+          try {
+            const targetFetchUrl = saveUrl || `/api/odontogram/${patientId}/state/`;
+            const res = await fetch(targetFetchUrl);
+            if (res.ok) {
+              const data = await res.json();
+              if (data && data.chart_data && Object.keys(data.chart_data).length > 0) {
+                chartData = data.chart_data;
+              }
+            }
+          } catch (netErr) {
+            console.log('Django API not reachable, running in standalone/GitHub Pages mode');
           }
         }
 
@@ -80,7 +98,7 @@ export default function AdvancedOdontogramApp({
     };
   }, [patientId, initialData]);
 
-  // Save current status to Django backend
+  // Save current status to Django backend or localStorage
   const handleSaveToEmr = async () => {
     if (readOnly) return;
     try {
@@ -88,31 +106,44 @@ export default function AdvancedOdontogramApp({
       setStatusMessage('Saving chart to EMR database...');
 
       const currentChart = getStatusChart();
-      const targetUrl = saveUrl || `/api/odontogram/${patientId}/state/`;
+      const targetUrl = saveUrl || (patientId ? `/api/odontogram/${patientId}/state/` : null);
 
-      const response = await fetch(targetUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrfToken,
-        },
-        body: JSON.stringify({
-          patient_id: patientId,
-          chart_data: currentChart,
-        }),
-      });
+      // Always save to browser localStorage as reliable backup
+      try {
+        localStorage.setItem(`rk_odontogram_${patientId || '1'}`, JSON.stringify(currentChart));
+      } catch (e) {}
 
-      if (!response.ok) {
-        throw new Error(`Server returned ${response.status}`);
+      if (targetUrl) {
+        try {
+          const response = await fetch(targetUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify({
+              patient_id: patientId,
+              chart_data: currentChart,
+            }),
+          });
+
+          if (response.ok) {
+            const resJson = await response.json();
+            setSaveStatus('saved');
+            setStatusMessage(`Saved to Server EMR (${new Date().toLocaleTimeString()})`);
+            if (onSaveSuccess && typeof onSaveSuccess === 'function') {
+              onSaveSuccess(resJson);
+            }
+            return;
+          }
+        } catch (fetchErr) {
+          console.warn('Backend POST failed, fallback to local storage save');
+        }
       }
 
-      const resJson = await response.json();
+      // Standalone / GitHub Pages save success
       setSaveStatus('saved');
-      setStatusMessage(`Saved successfully (${new Date().toLocaleTimeString()})`);
-
-      if (onSaveSuccess && typeof onSaveSuccess === 'function') {
-        onSaveSuccess(resJson);
-      }
+      setStatusMessage(`Saved to Local EMR (${new Date().toLocaleTimeString()})`);
     } catch (err) {
       console.error('Save to EMR failed:', err);
       setSaveStatus('error');

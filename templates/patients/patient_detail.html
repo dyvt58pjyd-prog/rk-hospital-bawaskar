@@ -42,21 +42,21 @@
 
 {% block content %}
 <!-- Patient Master Header & Medical Alerts Banner -->
-<div class="card" style="margin-bottom: 24px; padding: 24px;">
-  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
+<div class="card patient-profile-card" style="margin-bottom: 24px; padding: 24px;">
+  <div class="patient-header-flex" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
     <!-- Patient Demographics -->
-    <div style="display: flex; gap: 18px; align-items: center;">
-      <div style="width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, #0284c7, #0f172a); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; box-shadow: var(--shadow-md);">
+    <div class="patient-info-left" style="display: flex; gap: 18px; align-items: center; flex-wrap: wrap;">
+      <div style="width: 60px; height: 60px; min-width: 60px; border-radius: 16px; background: linear-gradient(135deg, #0284c7, #0f172a); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 800; box-shadow: var(--shadow-md);">
         {{ patient.first_name|make_list|first }}{{ patient.last_name|make_list|first }}
       </div>
       <div>
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--slate-900);">{{ patient.full_name }}</h1>
+        <div class="patient-name-badges" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <h1 style="font-size: 1.4rem; font-weight: 800; color: var(--slate-900); margin: 0;">{{ patient.full_name }}</h1>
           <span class="badge badge-primary" style="font-family: monospace; font-size: 0.8rem;">{{ patient.mrn }}</span>
           <span class="badge badge-slate">{{ patient.get_gender_display }} • {{ patient.age|default:"N/A" }} Yrs</span>
           <span class="badge" style="background: #f1f5f9; color: #334155;">Blood: <b>{{ patient.blood_group }}</b></span>
         </div>
-        <div style="font-size: 0.85rem; color: var(--slate-500); margin-top: 6px; display: flex; gap: 16px; flex-wrap: wrap;">
+        <div style="font-size: 0.85rem; color: var(--slate-500); margin-top: 6px; display: flex; gap: 14px; flex-wrap: wrap;">
           <span>📞 {{ patient.phone }}</span>
           {% if patient.email %}<span>✉️ {{ patient.email }}</span>{% endif %}
           {% if patient.address %}<span>📍 {{ patient.address|truncatechars:40 }}</span>{% endif %}
@@ -66,8 +66,8 @@
     </div>
 
     <!-- Quick Financial Health & Actions -->
-    <div style="display: flex; align-items: center; gap: 16px;">
-      <div style="text-align: right; padding-right: 16px; border-right: 1px solid var(--slate-200);">
+    <div class="patient-finance-actions" style="display: flex; align-items: center; gap: 16px;">
+      <div class="patient-finance-stat" style="text-align: right; padding-right: 16px; border-right: 1px solid var(--slate-200);">
         <div style="font-size: 0.75rem; font-weight: 600; color: var(--slate-500); text-transform: uppercase;">Financial Due</div>
         <div style="font-size: 1.25rem; font-weight: 800; color: {% if total_balance > 0 %}#b91c1c{% else %}#15803d{% endif %};">
           ₹{{ total_balance|floatformat:2 }}
@@ -75,7 +75,7 @@
         <div style="font-size: 0.72rem; color: var(--slate-400);">Paid: ₹{{ total_paid|floatformat:0 }} / ₹{{ total_billed|floatformat:0 }}</div>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 6px;">
+      <div class="patient-action-buttons" style="display: flex; flex-direction: column; gap: 6px;">
         <a href="{% url 'patient_edit' patient.id %}" class="btn btn-secondary btn-sm">Edit Profile</a>
         <a href="{% url 'invoice_create' patient.id %}" class="btn btn-primary btn-sm">+ Create Bill</a>
       </div>

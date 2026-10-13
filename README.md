@@ -69,3 +69,43 @@ python manage.py runserver 0.0.0.0:8000
 ```
 
 Open your browser at: **[http://127.0.0.1:8000/login/](http://127.0.0.1:8000/login/)**
+
+---
+
+## 🌐 Deploying to GitHub Pages (`*.github.io`)
+
+This repository is pre-configured with a standalone, mobile-responsive interactive showcase in the `docs/` folder, plus an automated GitHub Actions deployment workflow.
+
+### 3-Step Setup to Launch on `github.io`:
+
+1. **Push this repository to your GitHub account**:
+   ```bash
+   # Add all files and commit
+   git add -A
+   git commit -m "Launch RK Hospital Bawaskar on GitHub Pages"
+
+   # Point to your GitHub repository (create an empty repo on github.com first)
+   git branch -M main
+   git remote add origin https://github.com/<YOUR_GITHUB_USERNAME>/<YOUR_REPOSITORY_NAME>.git
+   git push -u origin main
+   ```
+
+2. **Enable GitHub Pages in your Repository Settings**:
+   - Navigate to your repository on GitHub (`https://github.com/<username>/<repo>`).
+   - Click **Settings** (gear icon at the top).
+   - In the left sidebar, click **Pages**.
+   - Under **Build and deployment > Source**:
+     - Choose **Deploy from a branch**.
+     - Branch: Select **`main`** and folder: **`/docs`**.
+     - Click **Save**.
+     *(Alternatively, you can choose "GitHub Actions" to use the pre-built workflow in `.github/workflows/deploy-pages.yml`)*
+
+3. **Visit Your Live Application**:
+   Within 1-2 minutes, GitHub will publish your live application at:
+   ```
+   https://<YOUR_GITHUB_USERNAME>.github.io/<YOUR_REPOSITORY_NAME>/
+   ```
+
+> 💡 **Full Stack (Django Backend) Cloud Deployment Note**:
+> GitHub Pages serves client-side HTML, CSS, React, and JavaScript. To host the full Python/Django backend with persistent SQLite/PostgreSQL databases live on the web, you can connect this same GitHub repository to free cloud platforms like **Render.com**, **Railway.app**, or **PythonAnywhere.com** in 1 click using `python manage.py runserver` or Gunicorn.
+

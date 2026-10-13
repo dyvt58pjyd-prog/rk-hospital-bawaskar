@@ -50,6 +50,32 @@
       box-shadow: var(--shadow-md);
       transform: translateY(-2px);
     }
+
+    @media (max-width: 900px) {
+      .login-container {
+        flex-direction: column;
+        min-height: auto;
+      }
+      .login-right {
+        order: 1;
+        border-left: none;
+        border-bottom: 1px solid var(--slate-200);
+        padding: 30px 20px;
+      }
+      .login-left {
+        order: 2;
+        padding: 30px 20px 50px 20px;
+      }
+      .role-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .login-right, .login-left {
+        padding: 24px 16px;
+      }
+    }
   </style>
 </head>
 <body>

@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RK Hospital Bawaskar | Dental Hospital Management & Visual EMR</title>
+  <meta name="description" content="RK Hospital Bawaskar - Premier Dental Hospital Management System featuring React Advanced Odontogram, multi-role clinical EMR, chair scheduling, digital radiographs, and billing.">
+  
+  <!-- Hospital Theme & Odontogram Bundle -->
+  <link rel="stylesheet" href="./static/css/hospital_theme.css">
+  <link rel="stylesheet" href="./static/odontogram_bundle/odontogram.bundle.css">
+
+  <style>
+    /* GitHub Pages Live Demo Special Utilities */
+    .demo-banner {
+      background: linear-gradient(90deg, #0f172a 0%, #0284c7 100%);
+      color: #ffffff;
+      padding: 8px 16px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      z-index: 1001;
+    }
+    .role-switcher-select {
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      outline: none;
+      cursor: pointer;
+    }
+    .role-switcher-select option {
+      background: #0f172a;
+      color: #ffffff;
+    }
+    .lightbox-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.9);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .lightbox-modal.active {
+      display: flex;
+    }
+    .lightbox-img {
+      max-width: 90vw;
+      max-height: 85vh;
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    @media (max-width: 768px) {
+      .demo-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        padding: 8px 12px;
+      }
+      .demo-banner > div:last-child {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- GitHub Pages Live Cloud Demo Banner -->
+<div class="demo-banner">
+  <div style="display: flex; align-items: center; gap: 8px;">
+    <span style="font-size: 1rem;">🌐</span>
+    <span><strong>RK Hospital Bawaskar</strong> • Live GitHub Pages Interactive Clinical Edition</span>
+  </div>
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <span style="font-size: 0.75rem; color: #bae6fd;">Simulate Role:</span>
+    <select class="role-switcher-select" id="roleSwitcher" onchange="switchDemoRole(this.value)">
+      <option value="DENTIST">Dr. Sharma (Senior Dentist / EMR Lead)</option>
+      <option value="ADMIN">Dr. Bawaskar (Director / Admin)</option>
+      <option value="RECEPTIONIST">Pooja (Front Desk / Appointments)</option>
+      <option value="HYGIENIST">Sneha (Dental Hygienist)</option>
+      <option value="PHARMACIST">Amit (Pharmacist / Materials)</option>
+      <option value="PATIENT">Rajesh Kumar (Patient Portal)</option>
+    </select>
+  </div>
+</div>
+
+<div class="app-layout">
+  <!-- Mobile Sidebar Backdrop -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <!-- Sidebar Navigation Drawer -->
+  <aside class="sidebar" id="appSidebar">
+    <div class="sidebar-brand">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #0ea5e9, #0284c7); border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);">
+            <svg style="width: 24px; height: 24px; fill: none; stroke: #ffffff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;" viewBox="0 0 24 24">
+              <path d="M12 2C8.5 2 6 4.5 6 8c0 3.5 1.5 6.5 2 10 .5 3 2 4 4 4s3.5-1 4-4c.5-3.5 2-6.5 2-10 0-3.5-2.5-6-6-6z"/>
+              <path d="M10 8c.5 1 1.5 1.5 2 1.5s1.5-.5 2-1.5"/>
+            </svg>
+          </div>
+          <div>
+            <div class="brand-font" style="font-weight: 800; font-size: 1.05rem; color: #ffffff; line-height: 1.15;">RK HOSPITAL</div>
+            <div style="font-size: 0.72rem; color: var(--primary-200); font-weight: 600; letter-spacing: 0.04em;">BAWASKAR DENTAL EMR</div>
+          </div>
+        </div>
+        <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close Menu">✕</button>
+      </div>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="nav-section-title">Clinical Workspace</div>
+      <a href="#dashboard" class="nav-link active" onclick="showSection('dashboard', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        <span>Dashboard</span>
+      </a>
+
+      <a href="#patient360" class="nav-link" onclick="showSection('patient360', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        <span>Patients EMR 360°</span>
+      </a>
+
+      <a href="#odontogram-studio" class="nav-link" onclick="showSection('odontogram-studio', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.5 2 6 4.5 6 8c0 3.5 1.5 6.5 2 10 .5 3 2 4 4 4s3.5-1 4-4c.5-3.5 2-6.5 2-10 0-3.5-2.5-6-6-6z"/></svg>
+        <span>React Odontogram Studio</span>
+      </a>
+
+      <a href="#chairs" class="nav-link" onclick="showSection('chairs', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        <span>Operatory Chairs (3)</span>
+      </a>
+
+      <div class="nav-section-title">Operations & Finance</div>
+      <a href="#billing" class="nav-link" onclick="showSection('billing', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+        <span>Billing & Invoices</span>
+      </a>
+
+      <a href="#radiographs" class="nav-link" onclick="showSection('radiographs', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+        <span>Digital Radiographs (OPG/IOPA)</span>
+      </a>
+
+      <a href="#laborders" class="nav-link" onclick="showSection('laborders', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        <span>Dental Lab Orders</span>
+      </a>
+    </div>
+
+    <div class="sidebar-user" style="padding: 16px; border-top: 1px solid rgba(255, 255, 255, 0.1); margin-top: auto;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: #0284c7; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;" id="userAvatar">
+          DS
+        </div>
+        <div>
+          <div style="font-weight: 700; font-size: 0.85rem; color: #ffffff;" id="currentUserName">Dr. Sharma</div>
+          <div style="font-size: 0.72rem; color: var(--primary-300);" id="currentUserRole">Senior Dentist</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Wrapper -->
+  <div class="main-content">
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <button type="button" class="mobile-toggle-btn" id="sidebarToggleBtn" aria-label="Open Navigation Menu">
+          <svg style="width: 22px; height: 22px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+
+        <span class="desktop-hospital-title" style="font-size: 0.85rem; color: var(--slate-500); font-weight: 600;">
+          🏥 RK Hospital Bawaskar • Centre of Dental Excellence & Maxillofacial Surgery
+        </span>
+        <span class="mobile-hospital-title" style="display: none; font-weight: 800; font-size: 0.95rem; color: var(--slate-900);">
+          🏥 RK Hospital Bawaskar
+        </span>
+      </div>
+
+      <div class="top-nav-actions" style="display: flex; align-items: center; gap: 10px;">
+        <span class="badge top-role-badge" style="background: #e0f2fe; color: #0284c7; padding: 6px 12px; font-size: 0.78rem; font-weight: 700;" id="topRoleBadge">
+          Senior Dentist
+        </span>
+        <button class="btn btn-primary btn-sm" onclick="openBookModal()">
+          <svg style="width: 15px; height: 15px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span class="btn-text-hide-mobile">+ Book Appointment</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="page-main-container">
+      
+      <!-- SECTION 1: DASHBOARD -->
+      <section id="section-dashboard" class="content-section">
+        <!-- Stats Grid -->
+        <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;">👥</div>
+            <div>
+              <div class="stat-value">1,482</div>
+              <div class="stat-label">Active Dental Patients</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #f0fdf4; color: #16a34a;">💺</div>
+            <div>
+              <div class="stat-value">3 / 3</div>
+              <div class="stat-label">Operatories Active</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #fef3c7; color: #d97706;">🦷</div>
+            <div>
+              <div class="stat-value">18</div>
+              <div class="stat-label">Procedures Scheduled</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #f5f3ff; color: #7c3aed;">₹</div>
+            <div>
+              <div class="stat-value">₹84.5k</div>
+              <div class="stat-label">Daily Revenue Stream</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2-Column Split: Appointments Queue & Operatory Schedule -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px;">
+          <!-- Live Appointments Queue -->
+          <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h2 style="font-size: 1.15rem; font-weight: 800; color: var(--slate-900);">Today's Clinical Appointment Queue</h2>
+              <button class="btn btn-secondary btn-sm" onclick="openBookModal()">+ New Booking</button>
+            </div>
+            <div class="table-container">
+              <table class="data-table" id="appointmentsTable">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Patient Name</th>
+                    <th>Dentist</th>
+                    <th>Operatory</th>
+                    <th>Chief Complaint</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="appointmentsListBody">
+                  <tr>
+                    <td><b>10:00 AM</b></td>
+                    <td><b>Rajesh Kumar</b> <span style="font-size:0.75rem; color:#64748b;">(RKB-0001)</span></td>
+                    <td>Dr. Sharma</td>
+                    <td><span class="badge" style="background:#e0f2fe; color:#0369a1;">Chair 1 - Operatory</span></td>
+                    <td>Toothache lower molar (#36)</td>
+                    <td><span class="badge badge-success">In Chair</span></td>
+                  </tr>
+                  <tr>
+                    <td><b>11:30 AM</b></td>
+                    <td><b>Priya Patel</b> <span style="font-size:0.75rem; color:#64748b;">(RKB-0002)</span></td>
+                    <td>Dr. Kapoor</td>
+                    <td><span class="badge" style="background:#fef3c7; color:#92400e;">Chair 2 - Surgery</span></td>
+                    <td>Orthodontic bracket repair</td>
+                    <td><span class="badge" style="background:#e0e7ff; color:#3730a3;">Confirmed</span></td>
+                  </tr>
+                  <tr>
+                    <td><b>02:00 PM</b></td>
+                    <td><b>Sunil Gavaskar</b> <span style="font-size:0.75rem; color:#64748b;">(RKB-0003)</span></td>
+                    <td>Dr. Sharma</td>
+                    <td><span class="badge" style="background:#e0f2fe; color:#0369a1;">Chair 1 - Operatory</span></td>
+                    <td>Crown cementation #16</td>
+                    <td><span class="badge" style="background:#f1f5f9; color:#475569;">Scheduled</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Quick Hospital Status Card -->
+          <div class="card">
+            <h2 style="font-size: 1.15rem; font-weight: 800; color: var(--slate-900); margin-bottom: 14px;">Operatory Availability</h2>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="padding: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-weight: 700; color: #166534; font-size: 0.9rem;">Chair 1: General Operatory</div>
+                  <div style="font-size: 0.78rem; color: #15803d;">Patient: Rajesh Kumar • Dr. Sharma</div>
+                </div>
+                <span class="badge badge-success">Occupied</span>
+              </div>
+              <div style="padding: 12px; background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-weight: 700; color: #92400e; font-size: 0.9rem;">Chair 2: Surgical Suite</div>
+                  <div style="font-size: 0.78rem; color: #b45309;">Sanitization in progress</div>
+                </div>
+                <span class="badge" style="background: #fef3c7; color: #b45309;">Sanitizing</span>
+              </div>
+              <div style="padding: 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-weight: 700; color: #1e40af; font-size: 0.9rem;">Chair 3: Orthodontics & Scaling</div>
+                  <div style="font-size: 0.78rem; color: #1d4ed8;">Ready for next appointment</div>
+                </div>
+                <span class="badge" style="background: #dbeafe; color: #1e40af;">Available</span>
+              </div>
+            </div>
+
+            <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--slate-200);">
+              <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="showSection('patient360')">
+                Open Patient 360° EMR Chart →
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2: PATIENT 360 & REACT ODONTOGRAM -->
+      <section id="section-patient360" class="content-section" style="display: none;">
+        <!-- Patient Master Header Card -->
+        <div class="card patient-profile-card" style="margin-bottom: 24px; padding: 24px;">
+          <div class="patient-header-flex" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
+            <!-- Demographics -->
+            <div class="patient-info-left" style="display: flex; gap: 18px; align-items: center; flex-wrap: wrap;">
+              <div style="width: 60px; height: 60px; min-width: 60px; border-radius: 16px; background: linear-gradient(135deg, #0284c7, #0f172a); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 800; box-shadow: var(--shadow-md);">
+                RK
+              </div>
+              <div>
+                <div class="patient-name-badges" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                  <h1 style="font-size: 1.4rem; font-weight: 800; color: var(--slate-900); margin: 0;">Rajesh Kumar</h1>
+                  <span class="badge badge-primary" style="font-family: monospace; font-size: 0.8rem;">RKB-2026-0001</span>
+                  <span class="badge badge-slate">Male • 38 Yrs</span>
+                  <span class="badge" style="background: #f1f5f9; color: #334155;">Blood: <b>O+</b></span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--slate-500); margin-top: 6px; display: flex; gap: 14px; flex-wrap: wrap;">
+                  <span>📞 +91 98765 43210</span>
+                  <span>✉️ rajesh.kumar@example.com</span>
+                  <span>📍 Nagpur Road, Bawaskar Complex</span>
+                  <span>🚨 Emg: Sunita Kumar (+91 98765 00000)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Financial Health & Action Buttons -->
+            <div class="patient-finance-actions" style="display: flex; align-items: center; gap: 16px;">
+              <div class="patient-finance-stat" style="text-align: right; padding-right: 16px; border-right: 1px solid var(--slate-200);">
+                <div style="font-size: 0.75rem; font-weight: 600; color: var(--slate-500); text-transform: uppercase;">Financial Due</div>
+                <div style="font-size: 1.25rem; font-weight: 800; color: #b91c1c;">
+                  ₹3,200.00
+                </div>
+                <div style="font-size: 0.72rem; color: var(--slate-400);">Paid: ₹1,800 / ₹5,000</div>
+              </div>
+
+              <div class="patient-action-buttons" style="display: flex; flex-direction: column; gap: 6px;">
+                <button class="btn btn-secondary btn-sm" onclick="alert('Profile details verified!')">Profile Info</button>
+                <button class="btn btn-primary btn-sm" onclick="showSubTab('billing-tab')">+ View Bill</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Medical Alerts Banner -->
+          <div style="margin-top: 20px; padding: 12px 16px; background: #fff1f2; border: 1.5px solid #fda4af; border-radius: var(--radius-md); display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 6px; color: #be123c; font-weight: 800; font-size: 0.85rem; text-transform: uppercase;">
+              <svg style="width: 18px; height: 18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+              Critical Medical Alerts:
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <span class="alert-tag">Penicillin Allergy (High Risk)</span>
+              <span class="alert-tag">Hypertension Stage 1</span>
+            </div>
+            <div style="font-size: 0.8rem; color: #9f1239; margin-left: auto;">
+              <b>Current Meds:</b> Amlodipine 5mg OD
+            </div>
+          </div>
+        </div>
+
+        <!-- EMR Sub-Navigation Tabs -->
+        <div class="emr-nav-tabs">
+          <button class="emr-tab-link active" onclick="showSubTab('odontogram-tab', this)">
+            🦷 Dental Chart (React Odontogram)
+          </button>
+          <button class="emr-tab-link" onclick="showSubTab('visits-tab', this)">
+            📋 Clinical Visits (SOAP Notes) <span class="badge badge-slate" style="font-size:0.65rem;">2</span>
+          </button>
+          <button class="emr-tab-link" onclick="showSubTab('treatments-tab', this)">
+            🛠️ Treatment Plan <span class="badge badge-slate" style="font-size:0.65rem;">3</span>
+          </button>
+          <button class="emr-tab-link" onclick="showSubTab('radiographs-tab', this)">
+            🩻 Radiographs / X-Rays <span class="badge badge-slate" style="font-size:0.65rem;">4</span>
+          </button>
+          <button class="emr-tab-link" onclick="showSubTab('prescriptions-tab', this)">
+            💊 Prescriptions (Rx) <span class="badge badge-slate" style="font-size:0.65rem;">1</span>
+          </button>
+          <button class="emr-tab-link" onclick="showSubTab('billing-tab', this)">
+            🧾 Invoices & Ledger <span class="badge badge-slate" style="font-size:0.65rem;">₹3,200</span>
+          </button>
+        </div>
+
+        <!-- SUB-TAB 1: REACT ADVANCED ODONTOGRAM CONTAINER -->
+        <div id="subtab-odontogram-tab" class="emr-subtab-pane">
+          <div style="border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); margin-bottom: 24px;">
+            <div
+              id="react-odontogram-root"
+              data-patient-id="1"
+              data-patient-name="Rajesh Kumar"
+              data-patient-mrn="RKB-2026-0001"
+              data-user-role="DENTIST"
+            >
+              <!-- Bundled React Odontogram will auto-mount here -->
+              <div style="padding: 40px; text-align: center; color: var(--slate-500); background: #ffffff; border: 1px solid var(--slate-200); border-radius: var(--radius-md);">
+                <div style="font-size: 1.1rem; font-weight: 700; color: var(--slate-700); margin-bottom: 6px;">
+                  Mounting React Advanced Odontogram...
+                </div>
+                <div style="font-size: 0.85rem;">Loading interactive anatomical dental surfaces, ICDAS matrices, and periodontometry</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 2: CLINICAL VISITS (SOAP NOTES) -->
+        <div id="subtab-visits-tab" class="emr-subtab-pane" style="display: none;">
+          <div class="card">
+            <h2 style="font-size: 1.15rem; font-weight: 800; color: var(--slate-900); margin-bottom: 16px;">Clinical Visit Records & SOAP Notes</h2>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <div style="padding: 16px; border: 1px solid var(--slate-200); border-radius: var(--radius-md); background: #ffffff;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span style="font-weight: 700; color: var(--primary-700);">Visit #102 • Oct 12, 2026</span>
+                  <span class="badge badge-primary">Dr. Sharma</span>
+                </div>
+                <p style="font-size: 0.88rem; color: var(--slate-700); margin: 4px 0;"><b>Subjective:</b> Patient reports severe throbbing pain in lower left molar (#36) aggravated by cold water.</p>
+                <p style="font-size: 0.88rem; color: var(--slate-700); margin: 4px 0;"><b>Objective:</b> Deep occlusal-distal caries on tooth #36. Tenderness to percussion positive (+). Electric pulp test delayed response.</p>
+                <p style="font-size: 0.88rem; color: var(--slate-700); margin: 4px 0;"><b>Assessment:</b> Irreversible Pulpitis #36 with symptomatic apical periodontitis.</p>
+                <p style="font-size: 0.88rem; color: var(--slate-700); margin: 4px 0;"><b>Plan:</b> Single-sitting Root Canal Treatment (RCT) under LA 2% lignocaine with adrenaline 1:80,000, followed by core buildup & zirconia crown.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 3: TREATMENT PLAN -->
+        <div id="subtab-treatments-tab" class="emr-subtab-pane" style="display: none;">
+          <div class="card">
+            <h2 style="font-size: 1.15rem; font-weight: 800; color: var(--slate-900); margin-bottom: 16px;">Comprehensive Dental Treatment Plan</h2>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Tooth</th>
+                    <th>Procedure</th>
+                    <th>Category</th>
+                    <th>Estimated Fee</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><b>Full Mouth</b></td>
+                    <td>Ultrasonic Scaling & Polishing</td>
+                    <td>Preventive</td>
+                    <td>₹1,200</td>
+                    <td><span class="badge badge-success">Completed</span></td>
+                  </tr>
+                  <tr>
+                    <td><b>#36 (Lower Left First Molar)</b></td>
+                    <td>Root Canal Treatment (Molar RCT)</td>
+                    <td>Endodontics</td>
+                    <td>₹3,500</td>
+                    <td><span class="badge" style="background: #e0f2fe; color: #0284c7;">In Progress</span></td>
+                  </tr>
+                  <tr>
+                    <td><b>#36</b></td>
+                    <td>CAD/CAM Monolithic Zirconia Crown</td>
+                    <td>Prosthodontics</td>
+                    <td>₹4,500</td>
+                    <td><span class="badge" style="background: #f1f5f9; color: #64748b;">Planned</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 4: RADIOGRAPHS / X-RAYS GALLERY -->
+        <div id="subtab-radiographs-tab" class="emr-subtab-pane" style="display: none;">
+          <div class="card">
+            <h2 style="font-size: 1.15rem; font-weight: 800; color: var(--slate-900); margin-bottom: 16px;">Digital Radiographs & Imaging</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+              <div style="border: 1px solid var(--slate-200); border-radius: 12px; overflow: hidden; background: #000; cursor: pointer;" onclick="openLightbox('./media/radiographs/iopa_36_rct_check.png')">
+                <img src="./media/radiographs/iopa_36_rct_check.png" alt="IOPA #36 RCT Check" style="width: 100%; height: 180px; object-fit: cover;">
+                <div style="padding: 10px; background: #ffffff;">
+                  <div style="font-weight: 700; font-size: 0.85rem;">IOPA #36 RCT Check</div>
+                  <div style="font-size: 0.75rem; color: var(--slate-500);">Periapical scan • Oct 12, 2026</div>
+                </div>
+              </div>
+              <div style="border: 1px solid var(--slate-200); border-radius: 12px; overflow: hidden; background: #000; cursor: pointer;" onclick="openLightbox('./media/radiographs/iopa_16_caries.png')">
+                <img src="./media/radiographs/iopa_16_caries.png" alt="IOPA #16 Interproximal" style="width: 100%; height: 180px; object-fit: cover;">
+                <div style="padding: 10px; background: #ffffff;">
+                  <div style="font-weight: 700; font-size: 0.85rem;">IOPA #16 Interproximal Caries</div>
+                  <div style="font-size: 0.75rem; color: var(--slate-500);">Periapical scan • Oct 10, 2026</div>
+                </div>
+              </div>
+              <div style="border: 1px solid var(--slate-200); border-radius: 12px; overflow: hidden; background: #000; cursor: pointer;" onclick="openLightbox('./media/radiographs/bitewing_posterior.png')">
+                <img src="./media/radiographs/bitewing_posterior.png" alt="Bitewing Posterior" style="width: 100%; height: 180px; object-fit: cover;">
+                <div style="padding: 10px; background: #ffffff;">
+                  <div style="font-weight: 700; font-size: 0.85rem;">Posterior Bitewing Left</div>
+                  <div style="font-size: 0.75rem; color: var(--slate-500);">Bitewing scan • Oct 05, 2026</div>
+                </div>
+              </div>
+              <div style="border: 1px solid var(--slate-200); border-radius: 12px; overflow: hidden; background: #000; cursor: pointer;" onclick="openLightbox('./media/radiographs/opg_panoramic_scan.png')">
+                <img src="./media/radiographs/opg_panoramic_scan.png" alt="Full Panoramic OPG" style="width: 100%; height: 180px; object-fit: cover;">
+                <div style="padding: 10px; background: #ffffff;">
+                  <div style="font-weight: 700; font-size: 0.85rem;">Full Panoramic OPG Scan</div>
+                  <div style="font-size: 0.75rem; color: var(--slate-500);">Full mouth panoramic • Sep 28, 2026</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 5: PRESCRIPTIONS (Rx) -->
+        <div id="subtab-prescriptions-tab" class="emr-subtab-pane" style="display: none;">
+          <div class="card">
+            <h2 style="font-size: 1.15rem; font-weight: 800; color: var(--slate-900); margin-bottom: 16px;">Active Dental Prescription (Rx)</h2>
+            <div style="padding: 20px; border: 1.5px solid var(--slate-200); border-radius: var(--radius-md); background: #ffffff;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--slate-200); padding-bottom: 12px; margin-bottom: 12px;">
+                <div>
+                  <div style="font-weight: 800; font-size: 1rem; color: var(--slate-900);">Rx #RX-2026-0881</div>
+                  <div style="font-size: 0.8rem; color: var(--slate-500);">Prescribed by: Dr. Sharma (MDS - Endodontics)</div>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ Print Rx Slip</button>
+              </div>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Medicine Name</th>
+                      <th>Dosage</th>
+                      <th>Frequency</th>
+                      <th>Duration</th>
+                      <th>Instructions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><b>Tab. Amoxicillin + Clavulanic Acid (Augmentin)</b></td>
+                      <td>625 mg</td>
+                      <td>1 - 0 - 1 (Twice Daily)</td>
+                      <td>5 Days</td>
+                      <td>Take with food. (Alert: Substitute with Azithromycin 500mg if penicillin sensitivity confirmed)</td>
+                    </tr>
+                    <tr>
+                      <td><b>Tab. Aceclofenac + Paracetamol (Zerodol-P)</b></td>
+                      <td>100mg / 325mg</td>
+                      <td>1 - 0 - 1 (SOS for pain)</td>
+                      <td>3 Days</td>
+                      <td>Take after meals with warm water</td>
+                    </tr>
+                    <tr>
+                      <td><b>Chlorhexidine Gluconate 0.2% Mouthwash</b></td>
+                      <td>10 ml</td>
+                      <td>Twice daily rinse</td>
+                      <td>7 Days</td>
+                      <td>Do not rinse with water for 30 minutes after</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 6: BILLING & INVOICES -->
+        <div id="subtab-billing-tab" class="emr-subtab-pane" style="display: none;">
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+              <h2 style="font-size: 1.15rem; font-weight: 800; color: var(--slate-900);">Invoice #INV-2026-0419</h2>
+              <span class="badge" style="background: #fef2f2; color: #dc2626; font-size: 0.85rem; font-weight: 700;">Partial Balance: ₹3,200</span>
+            </div>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Item / Clinical Service</th>
+                    <th>Quantity</th>
+                    <th>Rate</th>
+                    <th>GST (18%)</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Root Canal Treatment (Molar #36)</td>
+                    <td>1</td>
+                    <td>₹3,500.00</td>
+                    <td>₹0.00 (Exempt)</td>
+                    <td>₹3,500.00</td>
+                  </tr>
+                  <tr>
+                    <td>Digital IOPA Diagnostic X-Ray</td>
+                    <td>2</td>
+                    <td>₹400.00</td>
+                    <td>₹0.00 (Exempt)</td>
+                    <td>₹800.00</td>
+                  </tr>
+                  <tr>
+                    <td>Consultation & Diagnostic Charting</td>
+                    <td>1</td>
+                    <td>₹700.00</td>
+                    <td>₹0.00</td>
+                    <td>₹700.00</td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr style="font-weight: 800; background: var(--slate-50);">
+                    <td colspan="4" style="text-align: right;">Total Amount Billed:</td>
+                    <td>₹5,000.00</td>
+                  </tr>
+                  <tr style="font-weight: 700; color: #15803d;">
+                    <td colspan="4" style="text-align: right;">Paid via UPI (Ref #UPI9842):</td>
+                    <td>- ₹1,800.00</td>
+                  </tr>
+                  <tr style="font-weight: 800; color: #b91c1c; font-size: 1.05rem;">
+                    <td colspan="4" style="text-align: right;">Outstanding Balance Due:</td>
+                    <td>₹3,200.00</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <div style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 10px;">
+              <button class="btn btn-secondary" onclick="window.print()">Print Tax Invoice</button>
+              <button class="btn btn-primary" onclick="alert('Payment receipt generated successfully!')">Accept Payment</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3: FULLSCREEN ODONTOGRAM STUDIO SHORTCUT -->
+      <section id="section-odontogram-studio" class="content-section" style="display: none;">
+        <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h2 style="font-size: 1.3rem; font-weight: 800; color: var(--slate-900);">Dedicated Odontogram Studio</h2>
+            <p style="font-size: 0.85rem; color: var(--slate-500);">Interactive full-canvas anatomical charting for adult (32) and pediatric (20) arches.</p>
+          </div>
+          <button class="btn btn-primary" onclick="showSection('patient360'); showSubTab('odontogram-tab');">
+            ← Back to Patient 360
+          </button>
+        </div>
+        <div style="border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-md);">
+          <div id="react-odontogram-root-studio"></div>
+        </div>
+      </section>
+
+      <!-- SECTION 4: OPERATORY CHAIRS -->
+      <section id="section-chairs" class="content-section" style="display: none;">
+        <div class="card" style="margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+            <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--slate-900);">Dental Operatory Scheduling</h2>
+            <button class="btn btn-primary" onclick="openBookModal()">+ Book Operatory Slot</button>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+            <div style="padding: 16px; border: 1.5px solid #0284c7; border-radius: 12px; background: #f0f9ff;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="font-size: 1rem; font-weight: 800; color: #0369a1;">Chair 1: General Operatory</h3>
+                <span class="badge badge-success">Active</span>
+              </div>
+              <div style="font-size: 0.82rem; color: var(--slate-600); margin-bottom: 10px;">Equipped with Belmont Clesta II Dental Delivery Unit & Scaler.</div>
+              <div style="font-size: 0.8rem; font-weight: 700; color: #0369a1;">Current: Rajesh Kumar (Molar RCT #36)</div>
+            </div>
+            <div style="padding: 16px; border: 1.5px solid #f59e0b; border-radius: 12px; background: #fffbeb;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="font-size: 1rem; font-weight: 800; color: #b45309;">Chair 2: Surgical Operatory</h3>
+                <span class="badge" style="background:#fef3c7; color:#92400e;">Next at 11:30 AM</span>
+              </div>
+              <div style="font-size: 0.82rem; color: var(--slate-600); margin-bottom: 10px;">Equipped with Implant Physiodispenser & Surgical LED Light.</div>
+              <div style="font-size: 0.8rem; font-weight: 700; color: #b45309;">Next: Priya Patel (Orthodontics)</div>
+            </div>
+            <div style="padding: 16px; border: 1.5px solid #10b981; border-radius: 12px; background: #f0fdf4;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="font-size: 1rem; font-weight: 800; color: #166534;">Chair 3: Scaling & Pediatrics</h3>
+                <span class="badge" style="background:#dcfce7; color:#15803d;">Available</span>
+              </div>
+              <div style="font-size: 0.82rem; color: var(--slate-600); margin-bottom: 10px;">Dedicated pediatric friendly ergonomic upholstery & Piezo scaler.</div>
+              <div style="font-size: 0.8rem; font-weight: 700; color: #15803d;">Available for walk-in consultation</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 5: BILLING LIST -->
+      <section id="section-billing" class="content-section" style="display: none;">
+        <div class="card">
+          <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--slate-900); margin-bottom: 16px;">Billing Ledger & Invoices</h2>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Invoice ID</th>
+                  <th>Patient</th>
+                  <th>Date</th>
+                  <th>Amount Billed</th>
+                  <th>Amount Paid</th>
+                  <th>Balance Due</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><b>#INV-2026-0419</b></td>
+                  <td>Rajesh Kumar (RKB-0001)</td>
+                  <td>Oct 12, 2026</td>
+                  <td>₹5,000</td>
+                  <td>₹1,800</td>
+                  <td style="color:#b91c1c; font-weight:700;">₹3,200</td>
+                  <td><span class="badge badge-warning">Partial</span></td>
+                </tr>
+                <tr>
+                  <td><b>#INV-2026-0418</b></td>
+                  <td>Priya Patel (RKB-0002)</td>
+                  <td>Oct 11, 2026</td>
+                  <td>₹2,500</td>
+                  <td>₹2,500</td>
+                  <td style="color:#15803d; font-weight:700;">₹0</td>
+                  <td><span class="badge badge-success">Paid</span></td>
+                </tr>
+                <tr>
+                  <td><b>#INV-2026-0417</b></td>
+                  <td>Sunil Gavaskar (RKB-0003)</td>
+                  <td>Oct 10, 2026</td>
+                  <td>₹4,500</td>
+                  <td>₹4,500</td>
+                  <td style="color:#15803d; font-weight:700;">₹0</td>
+                  <td><span class="badge badge-success">Paid</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 6: RADIOGRAPHS -->
+      <section id="section-radiographs" class="content-section" style="display: none;">
+        <div class="card">
+          <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--slate-900); margin-bottom: 16px;">Hospital Digital Imaging & Radiographs</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+            <div style="border: 1px solid var(--slate-200); border-radius: 12px; overflow: hidden; background: #000; cursor: pointer;" onclick="openLightbox('./media/radiographs/opg_panoramic_scan.png')">
+              <img src="./media/radiographs/opg_panoramic_scan.png" alt="OPG Scan" style="width: 100%; height: 200px; object-fit: cover;">
+              <div style="padding: 10px; background: #ffffff;">
+                <div style="font-weight: 700;">Panoramic OPG Scan (Full Arch)</div>
+                <div style="font-size: 0.75rem; color: var(--slate-500);">Patient: Rajesh Kumar</div>
+              </div>
+            </div>
+            <div style="border: 1px solid var(--slate-200); border-radius: 12px; overflow: hidden; background: #000; cursor: pointer;" onclick="openLightbox('./media/radiographs/iopa_36_rct_check.png')">
+              <img src="./media/radiographs/iopa_36_rct_check.png" alt="IOPA #36" style="width: 100%; height: 200px; object-fit: cover;">
+              <div style="padding: 10px; background: #ffffff;">
+                <div style="font-weight: 700;">IOPA Radiograph #36</div>
+                <div style="font-size: 0.75rem; color: var(--slate-500);">Working length diagnostic confirmation</div>
+              </div>
+            </div>
+            <div style="border: 1px solid var(--slate-200); border-radius: 12px; overflow: hidden; background: #000; cursor: pointer;" onclick="openLightbox('./media/radiographs/iopa_16_caries.png')">
+              <img src="./media/radiographs/iopa_16_caries.png" alt="IOPA #16" style="width: 100%; height: 200px; object-fit: cover;">
+              <div style="padding: 10px; background: #ffffff;">
+                <div style="font-weight: 700;">IOPA Radiograph #16</div>
+                <div style="font-size: 0.75rem; color: var(--slate-500);">Interproximal occlusal caries</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 7: DENTAL LAB ORDERS -->
+      <section id="section-laborders" class="content-section" style="display: none;">
+        <div class="card">
+          <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--slate-900); margin-bottom: 16px;">Dental Lab Work Orders</h2>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>Patient</th>
+                  <th>Prosthesis Item</th>
+                  <th>Tooth #</th>
+                  <th>Lab Partner</th>
+                  <th>Shade</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><b>#LAB-2026-091</b></td>
+                  <td>Rajesh Kumar</td>
+                  <td>Monolithic Zirconia Crown</td>
+                  <td>#36</td>
+                  <td>Apex Dental Prosthetics Lab</td>
+                  <td>A2 (VITA 3D)</td>
+                  <td><span class="badge" style="background:#e0f2fe; color:#0284c7;">In Fabrication</span></td>
+                </tr>
+                <tr>
+                  <td><b>#LAB-2026-089</b></td>
+                  <td>Sunil Gavaskar</td>
+                  <td>E-Max Porcelain Veneer</td>
+                  <td>#11, #21</td>
+                  <td>Apex Dental Prosthetics Lab</td>
+                  <td>B1 Bleach</td>
+                  <td><span class="badge badge-success">Delivered</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- Mobile Bottom Navigation Bar -->
+<nav class="mobile-bottom-nav">
+  <a href="#dashboard" class="mobile-nav-item active" onclick="showSection('dashboard', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+    <span>Home</span>
+  </a>
+  <a href="#patient360" class="mobile-nav-item" onclick="showSection('patient360', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+    <span>Patients</span>
+  </a>
+  <a href="#chairs" class="mobile-nav-item" onclick="showSection('chairs', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+    <span>Chairs</span>
+  </a>
+  <a href="#billing" class="mobile-nav-item" onclick="showSection('billing', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+    <span>Billing</span>
+  </a>
+  <button type="button" class="mobile-nav-item" id="mobileMoreBtn" style="background:none;border:none;cursor:pointer;font-family:inherit;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    <span>Menu</span>
+  </button>
+</nav>
+
+<!-- Modal: Book Appointment -->
+<div class="modal-overlay" id="bookModal">
+  <div class="modal-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--slate-900);">Schedule Dental Appointment</h3>
+      <button onclick="closeBookModal()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--slate-500);">✕</button>
+    </div>
+    <form onsubmit="handleBookSubmit(event)">
+      <div class="form-group">
+        <label class="form-label">Patient Name</label>
+        <input type="text" id="bookPatientName" class="form-input" value="Rajesh Kumar" required>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="form-group">
+          <label class="form-label">Assigned Dentist</label>
+          <select id="bookDentist" class="form-select">
+            <option>Dr. Sharma (Endodontics)</option>
+            <option>Dr. Bawaskar (Director/Surgeon)</option>
+            <option>Dr. Kapoor (Orthodontics)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Operatory Chair</label>
+          <select id="bookChair" class="form-select">
+            <option>Chair 1: General Operatory</option>
+            <option>Chair 2: Surgical Operatory</option>
+            <option>Chair 3: Scaling & Ortho</option>
+          </select>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="form-group">
+          <label class="form-label">Time Slot</label>
+          <input type="time" id="bookTime" class="form-input" value="14:30" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select id="bookStatus" class="form-select">
+            <option value="SCHEDULED">Scheduled</option>
+            <option value="CONFIRMED">Confirmed</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Chief Complaint / Procedure</label>
+        <input type="text" id="bookComplaint" class="form-input" value="Crown Preparation #36" required>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px;">
+        <button type="button" class="btn btn-secondary" onclick="closeBookModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Confirm & Book Slot</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Lightbox Image Viewer -->
+<div class="lightbox-modal" id="lightboxModal" onclick="closeLightbox()">
+  <img src="" id="lightboxImg" class="lightbox-img" alt="Zoomed Radiograph">
+</div>
+
+<!-- Odontogram Bundle Script -->
+<script src="./static/odontogram_bundle/odontogram.bundle.js"></script>
+
+<!-- Live Application Controller Script -->
+<script>
+  // Mobile drawer controls
+  (function() {
+    var sidebar = document.getElementById('appSidebar');
+    var backdrop = document.getElementById('sidebarBackdrop');
+    var toggleBtn = document.getElementById('sidebarToggleBtn');
+    var closeBtn = document.getElementById('sidebarCloseBtn');
+    var moreBtn = document.getElementById('mobileMoreBtn');
+
+    function openSidebar() {
+      if (sidebar) sidebar.classList.add('sidebar-open');
+      if (backdrop) backdrop.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+      if (sidebar) sidebar.classList.remove('sidebar-open');
+      if (backdrop) backdrop.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
+    if (moreBtn) moreBtn.addEventListener('click', openSidebar);
+    if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+    if (backdrop) backdrop.addEventListener('click', closeSidebar);
+  })();
+
+  // Section Switcher
+  function showSection(sectionId, linkEl) {
+    var sections = document.querySelectorAll('.content-section');
+    sections.forEach(function(s) { s.style.display = 'none'; });
+
+    var target = document.getElementById('section-' + sectionId);
+    if (target) target.style.display = 'block';
+
+    if (linkEl) {
+      document.querySelectorAll('.sidebar-nav .nav-link').forEach(function(l) { l.classList.remove('active'); });
+      document.querySelectorAll('.mobile-bottom-nav .mobile-nav-item').forEach(function(l) { l.classList.remove('active'); });
+      linkEl.classList.add('active');
+    }
+
+    if (window.innerWidth <= 992) {
+      var sidebar = document.getElementById('appSidebar');
+      var backdrop = document.getElementById('sidebarBackdrop');
+      if (sidebar) sidebar.classList.remove('sidebar-open');
+      if (backdrop) backdrop.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // Mount studio if requested
+    if (sectionId === 'odontogram-studio') {
+      var studioRoot = document.getElementById('react-odontogram-root-studio');
+      if (studioRoot && window.mountAdvancedOdontogram && !studioRoot.hasChildNodes()) {
+        window.mountAdvancedOdontogram(studioRoot, {
+          patientId: 1,
+          patientName: 'Rajesh Kumar',
+          patientMrn: 'RKB-2026-0001',
+          userRole: document.getElementById('roleSwitcher').value
+        });
+      }
+    }
+  }
+
+  // Patient 360 Sub-Tab Switcher
+  function showSubTab(tabId, btnEl) {
+    var panes = document.querySelectorAll('.emr-subtab-pane');
+    panes.forEach(function(p) { p.style.display = 'none'; });
+
+    var targetPane = document.getElementById('subtab-' + tabId);
+    if (targetPane) targetPane.style.display = 'block';
+
+    if (btnEl) {
+      document.querySelectorAll('.emr-tab-link').forEach(function(b) { b.classList.remove('active'); });
+      btnEl.classList.add('active');
+    }
+  }
+
+  // Role simulation
+  function switchDemoRole(role) {
+    var roleNames = {
+      'DENTIST': { name: 'Dr. Sharma', title: 'Senior Dentist / EMR Lead', avatar: 'DS' },
+      'ADMIN': { name: 'Dr. Bawaskar', title: 'Hospital Director / Admin', avatar: 'DB' },
+      'RECEPTIONIST': { name: 'Pooja', title: 'Front Desk Coordinator', avatar: 'P' },
+      'HYGIENIST': { name: 'Sneha', title: 'Dental Hygienist', avatar: 'S' },
+      'PHARMACIST': { name: 'Amit', title: 'Pharmacy & Materials', avatar: 'A' },
+      'PATIENT': { name: 'Rajesh Kumar', title: 'Patient Portal', avatar: 'RK' }
+    };
+    var info = roleNames[role] || roleNames['DENTIST'];
+    document.getElementById('currentUserName').innerText = info.name;
+    document.getElementById('currentUserRole').innerText = info.title;
+    document.getElementById('userAvatar').innerText = info.avatar;
+    document.getElementById('topRoleBadge').innerText = info.title;
+  }
+
+  // Book Appointment Modal
+  function openBookModal() {
+    document.getElementById('bookModal').classList.add('active');
+  }
+  function closeBookModal() {
+    document.getElementById('bookModal').classList.remove('active');
+  }
+  function handleBookSubmit(e) {
+    e.preventDefault();
+    var pName = document.getElementById('bookPatientName').value;
+    var dName = document.getElementById('bookDentist').value;
+    var chair = document.getElementById('bookChair').value;
+    var time = document.getElementById('bookTime').value;
+    var complaint = document.getElementById('bookComplaint').value;
+
+    var tbody = document.getElementById('appointmentsListBody');
+    var newRow = document.createElement('tr');
+    newRow.innerHTML = '<td><b>' + time + '</b></td>' +
+      '<td><b>' + pName + '</b> <span style="font-size:0.75rem; color:#64748b;">(Walk-In)</span></td>' +
+      '<td>' + dName + '</td>' +
+      '<td><span class="badge" style="background:#e0f2fe; color:#0369a1;">' + chair + '</span></td>' +
+      '<td>' + complaint + '</td>' +
+      '<td><span class="badge" style="background:#dbeafe; color:#1e40af;">Scheduled</span></td>';
+    tbody.prepend(newRow);
+
+    closeBookModal();
+    alert('Appointment booked successfully for ' + pName + ' at ' + time + '!');
+  }
+
+  // Lightbox Image Viewer
+  function openLightbox(src) {
+    var modal = document.getElementById('lightboxModal');
+    var img = document.getElementById('lightboxImg');
+    img.src = src;
+    modal.classList.add('active');
+  }
+  function closeLightbox() {
+    document.getElementById('lightboxModal').classList.remove('active');
+  }
+</script>
+
+</body>
+</html>

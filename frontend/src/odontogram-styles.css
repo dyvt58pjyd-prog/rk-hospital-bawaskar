@@ -262,9 +262,118 @@
 .rk-odontogram-shell-wrapper {
   min-height: 680px;
   background: #f8fafc;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Adjust odontogram-root height & scrolling inside Django template */
 .rk-odontogram-shell-wrapper .odontogram-root {
   min-height: 680px;
+  min-width: 100%;
+}
+
+/* Mobile Touch & Responsive Alignment */
+@media (max-width: 900px) {
+  .rk-studio-bar {
+    padding: 10px 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .rk-studio-left {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .rk-hospital-badge {
+    font-size: 0.75rem;
+  }
+
+  .rk-studio-center {
+    width: 100%;
+    justify-content: center;
+    display: flex;
+  }
+
+  .rk-status-indicator {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .rk-studio-right {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .rk-btn-group {
+    flex: 1 1 auto;
+    min-width: 160px;
+  }
+
+  .rk-btn-group .rk-btn-xs {
+    flex: 1;
+    text-align: center;
+    padding: 6px 4px;
+    font-size: 0.7rem;
+  }
+
+  .rk-select-compact {
+    flex: 1 1 auto;
+    min-width: 110px;
+    font-size: 0.72rem;
+    padding: 6px 8px;
+  }
+
+  .rk-export-group {
+    display: flex;
+    gap: 4px;
+  }
+
+  .rk-btn-save {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    margin-top: 4px;
+  }
+
+  .rk-odontogram-shell-wrapper {
+    min-height: 560px;
+  }
+
+  .rk-odontogram-shell-wrapper .odontogram-root {
+    min-height: 560px;
+  }
+}
+
+@media (max-width: 500px) {
+  .rk-hospital-badge {
+    font-size: 0.7rem;
+  }
+
+  .rk-patient-chip {
+    font-size: 0.72rem;
+    padding: 3px 8px;
+  }
+
+  .rk-export-group {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 2px;
+  }
+
+  .rk-export-group .rk-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 6px 4px;
+  }
 }
