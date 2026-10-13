@@ -37,21 +37,20 @@ A specialized Django-based Hospital Management System with an Interactive Dental
 
 ---
 
-## 👥 Role-Based Logins & Credentials
+## 👥 Role-Based Staff Accounts & Access Control
 
-The system is configured with a **fresh database (0 patients)** and the following pre-configured staff accounts:
+The system is configured with a **fresh database (0 patients)** and role-based permissions:
 
-| Role | Username | Password | Full Name & Title | Specialty Focus |
-|---|---|---|---|---|
-| **Hospital Director & Super Administrator** | `admin` | `Anurag@268724` | Admin (Dr. Anurag Bawaskar) | Medical Director • Full Master Access |
-| **Senior Dentist (Endodontist)** | `dr.sharma` | `dentist123` | Dr. Priya Sharma | Conservative Dentistry & Visual EMR |
-| **Orthodontist (Dentist)** | `dr.kapoor` | `dentist123` | Dr. Rohan Kapoor | Orthodontics & Clear Aligners |
-| **Front Desk (Reception)** | `reception` | `reception123` | Sneha Verma | OPD Coordination & Registration |
-| **Dental Hygienist (Nurse)** | `hygienist` | `hygienist123` | Pooja Shinde | Prophylaxis & Sterilization |
-| **Pharmacy / Store Manager** | `pharmacy` | `pharmacy123` | Amit Deshmukh | Material Store & Dispensary |
+| Role | Username | Full Name & Title | Specialty Focus |
+|---|---|---|---|
+| **Hospital Director & Super Administrator** | `admin` | Admin (Dr. Anurag Bawaskar) | Medical Director • Full Master Access |
+| **Senior Dentist (Endodontist)** | `dr.sharma` | Dr. Priya Sharma | Conservative Dentistry & Visual EMR |
+| **Orthodontist (Dentist)** | `dr.kapoor` | Dr. Rohan Kapoor | Orthodontics & Clear Aligners |
+| **Front Desk (Reception)** | `reception` | Sneha Verma | OPD Coordination & Registration |
+| **Dental Hygienist (Nurse)** | `hygienist` | Pooja Shinde | Prophylaxis & Sterilization |
+| **Pharmacy / Store Manager** | `pharmacy` | Amit Deshmukh | Material Store & Dispensary |
 
-> ⚡ **Clean Fresh State:** All mock patients have been cleared. Log in as **`admin`** to start adding real patients and clinical records.
-> ⚡ **Quick Login:** The login screen (`/login/`) includes an **Auto-Fill Admin** button to enter credentials with one tap.
+> 🔒 **Security Notice:** All user accounts require password authentication. Credentials are kept strictly confidential. Log in as **`admin`** to manage hospital users, staff roles, and patient records.
 
 ---
 

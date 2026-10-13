@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login | RK Hospital Bawaskar - Dental Hospital Management System</title>
+  <title>Staff Login | RK Hospital Bawaskar - Dental Hospital Management System</title>
   <link rel="stylesheet" href="{% static 'css/hospital_theme.css' %}">
   <style>
     .login-container {
@@ -12,68 +12,121 @@
       display: flex;
       background: radial-gradient(circle at top right, #e0f2fe, #f8fafc 60%, #ecfeff);
     }
-    .login-left {
+    .login-brand-side {
       flex: 1.1;
-      padding: 50px 60px;
+      padding: 60px;
       display: flex;
       flex-direction: column;
       justify-content: center;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f766e 100%);
+      color: #ffffff;
+      position: relative;
+      overflow: hidden;
     }
-    .login-right {
-      flex: 1;
+    .login-brand-side::before {
+      content: "";
+      position: absolute;
+      top: -100px;
+      right: -100px;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .login-form-side {
+      flex: 0.9;
       background: #ffffff;
-      border-left: 1px solid var(--slate-200);
-      padding: 50px 60px;
+      padding: 60px;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      box-shadow: -10px 0 30px rgba(0,0,0,0.03);
+      box-shadow: -10px 0 30px rgba(0,0,0,0.04);
     }
-    .role-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    .feature-list {
+      margin-top: 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 520px;
+    }
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
       gap: 14px;
-      margin-top: 20px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md);
+      backdrop-filter: blur(8px);
     }
-    .role-card {
-      background: #ffffff;
+    .feature-icon {
+      font-size: 1.25rem;
+      line-height: 1;
+      margin-top: 2px;
+    }
+    .feature-title {
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: #ffffff;
+    }
+    .feature-desc {
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+    .password-wrap {
+      position: relative;
+    }
+    .password-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--slate-400);
+      font-size: 1rem;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s;
+    }
+    .password-toggle:hover {
+      color: var(--slate-700);
+    }
+    .security-notice {
+      margin-top: 32px;
+      padding: 14px 16px;
+      background: #f8fafc;
       border: 1px solid var(--slate-200);
       border-radius: var(--radius-md);
-      padding: 14px 16px;
-      transition: all 0.2s ease;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .role-card:hover {
-      border-color: var(--primary-500);
-      box-shadow: var(--shadow-md);
-      transform: translateY(-2px);
+      font-size: 0.78rem;
+      color: var(--slate-600);
+      line-height: 1.5;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 960px) {
       .login-container {
         flex-direction: column;
-        min-height: auto;
       }
-      .login-right {
-        order: 1;
-        border-left: none;
-        border-bottom: 1px solid var(--slate-200);
-        padding: 30px 20px;
-      }
-      .login-left {
+      .login-brand-side {
         order: 2;
-        padding: 30px 20px 50px 20px;
+        padding: 40px 24px;
       }
-      .role-grid {
-        grid-template-columns: 1fr;
+      .login-form-side {
+        order: 1;
+        padding: 40px 24px;
+        box-shadow: none;
       }
     }
 
     @media (max-width: 480px) {
-      .login-right, .login-left {
-        padding: 24px 16px;
+      .login-brand-side, .login-form-side {
+        padding: 28px 18px;
       }
     }
   </style>
@@ -81,73 +134,90 @@
 <body>
 
 <div class="login-container">
-  <!-- Left Side: Role Selector & System Overview -->
-  <div class="login-left">
-    <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 24px;">
-      <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #0ea5e9, #0284c7); border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(14, 165, 233, 0.35);">
+  <!-- Left Side: Hospital Identity & System Safeguards -->
+  <div class="login-brand-side">
+    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+      <div style="width: 52px; height: 52px; background: linear-gradient(135deg, #0ea5e9, #0284c7); border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(14, 165, 233, 0.4); flex-shrink: 0;">
         <svg style="width: 30px; height: 30px; fill: none; stroke: #ffffff; stroke-width: 2.2;" viewBox="0 0 24 24">
           <path d="M12 2C8.5 2 6 4.5 6 8c0 3.5 1.5 6.5 2 10 .5 3 2 4 4 4s3.5-1 4-4c.5-3.5 2-6.5 2-10 0-3.5-2.5-6-6-6z"/>
           <path d="M10 8c.5 1 1.5 1.5 2 1.5s1.5-.5 2-1.5"/>
         </svg>
       </div>
       <div>
-        <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--slate-900); line-height: 1.1;">RK HOSPITAL BAWASKAR</h1>
-        <div style="font-size: 0.85rem; font-weight: 600; color: var(--primary-600); letter-spacing: 0.05em; text-transform: uppercase;">
-          Advanced Dental Hospital Management & Visual EMR
+        <h1 style="font-size: 1.65rem; font-weight: 800; color: #ffffff; margin: 0; line-height: 1.1; letter-spacing: -0.01em;">
+          RK HOSPITAL BAWASKAR
+        </h1>
+        <div style="font-size: 0.82rem; font-weight: 700; color: #38bdf8; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 4px;">
+          Centre of Dental Surgery & Oral Health
         </div>
       </div>
     </div>
 
-    <p style="color: var(--slate-600); font-size: 0.95rem; line-height: 1.6; max-width: 650px;">
-      A dedicated role-based medical application crafted specifically for Dental Hospital workflows: Chair scheduling, interactive 32-tooth odontogram charting, digital dental prescriptions, surgical notes, dental lab order tracking, and itemized billing.
+    <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.6; max-width: 540px; margin: 0 0 10px;">
+      Integrated Dental Hospital Information System & Electronic Medical Record (EMR). Secure clinical management designed for oral surgery, operative dentistry, and patient care coordination.
     </p>
 
-    <!-- One-Click Particular Role Logins -->
-    <div style="margin-top: 28px;">
-      <div style="display: flex; align-items: center; justify-content: space-between;">
-        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--slate-800);">
-          ⚡ Select Particular Login (One-Click Access)
-        </h3>
-        <span style="font-size: 0.78rem; color: var(--slate-500);">All roles pre-configured</span>
+    <!-- Clinical Features Highlights -->
+    <div class="feature-list">
+      <div class="feature-item">
+        <span class="feature-icon">🦷</span>
+        <div>
+          <div class="feature-title">Interactive 32-Tooth Visual Odontogram</div>
+          <div class="feature-desc">Surface-level anatomical dental charting with FDI tooth notation and clinical diagnosis.</div>
+        </div>
       </div>
 
-      <div class="role-grid">
-        {% for acc in demo_accounts %}
-        <div class="role-card" style="{% if acc.username == 'admin' %}border: 2px solid #0284c7; background: #f0f9ff; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.15);{% endif %}">
-          <div>
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-              <span class="badge {{ acc.badge }}" style="font-size: 0.7rem;">{{ acc.role }}</span>
-              {% if acc.username == 'admin' %}<span class="badge badge-primary" style="font-size: 0.65rem;">MASTER ADMIN</span>{% endif %}
-            </div>
-            <div style="font-weight: 700; font-size: 0.95rem; color: var(--slate-900);">{{ acc.name }}</div>
-            <div style="font-size: 0.78rem; color: var(--slate-500); margin-top: 2px;">{{ acc.spec }}</div>
-            <div style="font-size: 0.75rem; color: var(--slate-600); margin-top: 6px; font-family: monospace; background: rgba(0,0,0,0.03); padding: 4px 8px; border-radius: 6px;">
-              User: <b>{{ acc.username }}</b> {% if acc.pass_hint %}| Pass: <b>{{ acc.pass_hint }}</b>{% endif %}
-            </div>
-          </div>
-          <div style="margin-top: 12px;">
-            <a href="?demo_login={{ acc.username }}" class="btn {% if acc.username == 'admin' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm" style="width: 100%; justify-content: center; font-size: 0.8rem;">
-              Sign in as {{ acc.username }} →
-            </a>
-          </div>
+      <div class="feature-item">
+        <span class="feature-icon">✍️</span>
+        <div>
+          <div class="feature-title">Paperless Touch Informed Consents</div>
+          <div class="feature-desc">Digital signatures for Implants, RCT, Extractions, and Anesthesia with legal certificate generation.</div>
         </div>
-        {% endfor %}
       </div>
+
+      <div class="feature-item">
+        <span class="feature-icon">📲</span>
+        <div>
+          <div class="feature-title">WhatsApp Clinical Communication</div>
+          <div class="feature-desc">Automated appointment alerts, reminders, and post-operative care instructions.</div>
+        </div>
+      </div>
+
+      <div class="feature-item">
+        <span class="feature-icon">🔒</span>
+        <div>
+          <div class="feature-title">Confidential Healthcare Records</div>
+          <div class="feature-desc">Role-based access control with comprehensive clinical audit logging and encrypted sessions.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hospital Legal Notice -->
+    <div style="margin-top: 40px; font-size: 0.75rem; color: #94a3b8; line-height: 1.5; max-width: 520px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 16px;">
+      ⚠️ <b>CONFIDENTIALITY NOTICE:</b> This system contains sensitive Protected Health Information (PHI). Authorized clinical personnel only. Unauthorized access, disclosure, or misuse is strictly prohibited under applicable healthcare privacy laws.
     </div>
   </div>
 
   <!-- Right Side: Standard Secure Form Login -->
-  <div class="login-right">
-    <div style="max-width: 400px; margin: 0 auto; width: 100%;">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-        <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--slate-900); margin: 0;">Clinical Staff Login</h2>
-        <span class="badge badge-success" style="font-size: 0.72rem;">Fresh Database Active</span>
+  <div class="login-form-side">
+    <div style="max-width: 380px; margin: 0 auto; width: 100%;">
+      <!-- Form Header -->
+      <div style="margin-bottom: 24px;">
+        <span class="badge badge-primary" style="font-size: 0.72rem; margin-bottom: 10px; display: inline-block;">
+          SECURE GATEWAY
+        </span>
+        <h2 style="font-size: 1.55rem; font-weight: 800; color: var(--slate-900); margin: 0 0 6px;">
+          Hospital Staff Login
+        </h2>
+        <p style="font-size: 0.85rem; color: var(--slate-500); margin: 0;">
+          Sign in with your authorized hospital credentials
+        </p>
       </div>
-      <p style="font-size: 0.85rem; color: var(--slate-500); margin-bottom: 20px;">Sign in with your assigned hospital credentials</p>
 
+      <!-- Messages / Feedback -->
       {% if messages %}
         {% for message in messages %}
-          <div style="padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 0.85rem; font-weight: 500;
+          <div style="padding: 12px 14px; border-radius: 8px; margin-bottom: 18px; font-size: 0.85rem; font-weight: 500;
             {% if message.tags == 'error' %}background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;
             {% else %}background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;{% endif %}">
             {{ message }}
@@ -155,52 +225,81 @@
         {% endfor %}
       {% endif %}
 
-      <!-- Quick Admin Credentials Card -->
-      <div style="padding: 12px 14px; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: var(--radius-md); margin-bottom: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div style="font-size: 0.82rem; font-weight: 700; color: #166534;">👑 Primary Administrator</div>
-          <button type="button" class="btn btn-sm btn-primary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="fillAdminCreds()">
-            Auto-Fill Admin
-          </button>
-        </div>
-        <div style="font-size: 0.76rem; color: #15803d; margin-top: 4px; font-family: monospace;">
-          Username: <b>admin</b> | Password: <b>Anurag@268724</b>
-        </div>
-      </div>
-
+      <!-- Standard Confidential Form -->
       <form method="POST" action="{% url 'login' %}">
         {% csrf_token %}
-        <div class="form-group">
-          <label class="form-label">Username</label>
-          <input type="text" id="id_username" name="username" class="form-input" placeholder="e.g. admin" value="admin" required autofocus>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label" for="id_username">Username or Staff ID</label>
+          <input
+            type="text"
+            id="id_username"
+            name="username"
+            class="form-input"
+            placeholder="Enter username"
+            required
+            autocomplete="username"
+            autofocus
+          >
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Password</label>
-          <input type="password" id="id_password" name="password" class="form-input" placeholder="••••••••" required>
+        <div class="form-group" style="margin-bottom: 22px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="form-label" for="id_password" style="margin: 0;">Password</label>
+          </div>
+          <div class="password-wrap">
+            <input
+              type="password"
+              id="id_password"
+              name="password"
+              class="form-input"
+              placeholder="Enter password"
+              required
+              autocomplete="current-password"
+            >
+            <button type="button" class="password-toggle" onclick="togglePasswordVisibility()" title="Show/Hide Password" aria-label="Toggle password visibility">
+              <span id="eyeIcon">👁️</span>
+            </button>
+          </div>
         </div>
 
-        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px; padding: 12px; font-weight: 700; font-size: 0.95rem;">
-          Secure Sign In to Hospital Portal →
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-weight: 700; font-size: 0.95rem; justify-content: center; box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);">
+          Sign In to Hospital Portal →
         </button>
       </form>
 
-      <div style="margin-top: 28px; padding: 14px; background: var(--slate-50); border: 1px dashed var(--slate-200); border-radius: var(--radius-md); font-size: 0.8rem; color: var(--slate-600); line-height: 1.5;">
-        <b>🏥 Fresh System Status:</b>
-        <div style="margin-top: 4px; color: var(--slate-500);">
-          Patient tables are completely clean and empty. Log in as <b>admin</b> to register real patients, configure operatories, and conduct visual odontogram charting.
+      <!-- Security Details Box -->
+      <div class="security-notice">
+        <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--slate-700); margin-bottom: 4px;">
+          <span>🔒</span>
+          <span>Encrypted Session</span>
         </div>
+        <div>
+          All login attempts and session activities are monitored and cryptographically verified. For account support or password resets, contact the Hospital IT Administrator.
+        </div>
+      </div>
+
+      <!-- Footer Info -->
+      <div style="margin-top: 32px; text-align: center; font-size: 0.75rem; color: var(--slate-400);">
+        RK Hospital Bawaskar • Centre of Dental Excellence<br>
+        Nagpur Road Campus • Emergency: +91 98220 11223
       </div>
     </div>
   </div>
 </div>
 
 <script>
-  function fillAdminCreds() {
-    var u = document.getElementById('id_username');
-    var p = document.getElementById('id_password');
-    if (u) u.value = 'admin';
-    if (p) p.value = 'Anurag@268724';
+  function togglePasswordVisibility() {
+    var passInput = document.getElementById('id_password');
+    var eyeIcon = document.getElementById('eyeIcon');
+    if (!passInput) return;
+    if (passInput.type === 'password') {
+      passInput.type = 'text';
+      if (eyeIcon) eyeIcon.textContent = '🙈';
+    } else {
+      passInput.type = 'password';
+      if (eyeIcon) eyeIcon.textContent = '👁️';
+    }
   }
 </script>
 

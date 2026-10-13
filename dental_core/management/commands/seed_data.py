@@ -212,4 +212,4 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS("RK Hospital Bawaskar system ready: Procedure Catalog, Operatory Chairs & Inventory active."))
         self.stdout.write(self.style.SUCCESS("All patient tables are 100% CLEAN and FRESH (0 patients)."))
-        self.stdout.write(self.style.SUCCESS("Primary Admin credentials active: username='admin' | password='Anurag@268724'"))
+        self.stdout.write(self.style.SUCCESS("Primary Admin account active: username='admin' (Password configured)."))

@@ -30,36 +30,18 @@ def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
 
-    # Demo quick login action
-    demo_user = request.GET.get('demo_login')
-    if demo_user:
-        user = User.objects.filter(username=demo_user).first()
-        if user:
-            login(request, user)
-            messages.success(request, f"Welcome back, {user.get_full_name() or user.username} ({user.get_role_display()})!")
-            return redirect('dashboard')
-
     if request.method == 'POST':
-        u = request.POST.get('username')
-        p = request.POST.get('password')
+        u = request.POST.get('username', '').strip()
+        p = request.POST.get('password', '')
         user = authenticate(request, username=u, password=p)
         if user is not None:
             login(request, user)
-            messages.success(request, f"Logged in successfully as {user.get_full_name() or user.username}!")
+            messages.success(request, f"Welcome, {user.get_full_name() or user.username}!")
             return redirect('dashboard')
         else:
-            messages.error(request, "Invalid username or password. Please try again or use the quick login demo accounts.")
+            messages.error(request, "Invalid username or password. Please verify your credentials and try again.")
 
-    # Pre-configured staff accounts
-    demo_accounts = [
-        {'role': 'Hospital Director (Admin)', 'username': 'admin', 'name': 'Admin (Dr. Anurag Bawaskar)', 'badge': 'bg-rose-500', 'spec': 'Super Administrator • Full Access', 'pass_hint': 'Anurag@268724'},
-        {'role': 'Senior Dentist (Endodontist)', 'username': 'dr.sharma', 'name': 'Dr. Priya Sharma', 'badge': 'bg-cyan-600', 'spec': 'Endodontics & Visual EMR Charting', 'pass_hint': 'dentist123'},
-        {'role': 'Front Desk (Reception)', 'username': 'reception', 'name': 'Sneha Verma', 'badge': 'bg-amber-500', 'spec': 'OPD Appointments & Billing Desk', 'pass_hint': 'reception123'},
-        {'role': 'Dental Hygienist (Nurse)', 'username': 'hygienist', 'name': 'Pooja Shinde', 'badge': 'bg-emerald-600', 'spec': 'Prophylaxis & Sterilization', 'pass_hint': 'hygienist123'},
-        {'role': 'Pharmacy & Inventory', 'username': 'pharmacy', 'name': 'Amit Deshmukh', 'badge': 'bg-purple-600', 'spec': 'Dental Store & Material Dispensary', 'pass_hint': 'pharmacy123'},
-    ]
-
-    return render(request, 'auth/login.html', {'demo_accounts': demo_accounts})
+    return render(request, 'auth/login.html')
 
 
 def logout_view(request):
