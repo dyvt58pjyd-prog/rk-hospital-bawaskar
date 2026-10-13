@@ -3,326 +3,598 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#0ea5e9">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="RK Hospital">
   <link rel="manifest" href="{% static 'manifest.json' %}">
   <link rel="icon" type="image/png" sizes="192x192" href="{% static 'images/icon-192.png' %}">
   <link rel="apple-touch-icon" href="{% static 'images/icon-192.png' %}">
-  <title>Staff Login | RK Hospital Bawaskar - Dental Hospital Management System</title>
+  <title>Staff & Clinical Login • RK Hospital Bawaskar</title>
   <link rel="stylesheet" href="{% static 'css/hospital_theme.css' %}">
   <style>
-    .login-container {
+    :root {
+      --med-blue: #0ea5e9;
+      --med-blue-dark: #0284c7;
+      --med-slate-dark: #0f172a;
+      --med-slate-body: #334155;
+      --med-slate-light: #64748b;
+      --med-border: #e2e8f0;
+      --med-bg-tint: #f0f9ff;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(120% 120% at 50% 0%, #e0f2fe 0%, #f0f9ff 32%, #ffffff 70%, #f8fafc 100%);
+      color: var(--med-slate-dark);
       min-height: 100vh;
-      display: flex;
-      background: radial-gradient(circle at top right, #e0f2fe, #f8fafc 60%, #ecfeff);
-    }
-    .login-brand-side {
-      flex: 1.1;
-      padding: 60px;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f766e 100%);
-      color: #ffffff;
+      align-items: center;
       position: relative;
-      overflow: hidden;
+      overflow-x: hidden;
+      padding: max(20px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
     }
-    .login-brand-side::before {
-      content: "";
+
+    /* Ambient Medical Background Elements */
+    .bg-mesh-pattern {
       position: absolute;
-      top: -100px;
-      right: -100px;
-      width: 400px;
-      height: 400px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%);
+      inset: 0;
+      background-image: radial-gradient(#bae6fd 0.8px, transparent 0.8px);
+      background-size: 24px 24px;
+      opacity: 0.45;
       pointer-events: none;
+      z-index: 0;
     }
-    .login-form-side {
-      flex: 0.9;
-      background: #ffffff;
-      padding: 60px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      box-shadow: -10px 0 30px rgba(0,0,0,0.04);
-    }
-    .feature-list {
-      margin-top: 36px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      max-width: 520px;
-    }
-    .feature-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-      padding: 12px 16px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: var(--radius-md);
-      backdrop-filter: blur(8px);
-    }
-    .feature-icon {
-      font-size: 1.25rem;
-      line-height: 1;
-      margin-top: 2px;
-    }
-    .feature-title {
-      font-weight: 700;
-      font-size: 0.92rem;
-      color: #ffffff;
-    }
-    .feature-desc {
-      font-size: 0.8rem;
-      color: #cbd5e1;
-      margin-top: 2px;
-      line-height: 1.4;
-    }
-    .password-wrap {
-      position: relative;
-    }
-    .password-toggle {
+
+    .ambient-glow {
       position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--slate-400);
-      font-size: 1rem;
-      padding: 4px;
+      top: -120px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 580px;
+      height: 380px;
+      background: radial-gradient(circle, rgba(14, 165, 233, 0.18) 0%, rgba(56, 189, 248, 0.08) 50%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(40px);
+    }
+
+    /* Main Login Shell */
+    .login-wrapper {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 440px;
+      margin: auto;
+    }
+
+    /* Pristine Medical Card */
+    .login-card {
+      background: #ffffff;
+      border: 1px solid rgba(14, 165, 233, 0.22);
+      border-radius: 26px;
+      padding: 38px 32px 34px;
+      box-shadow: 0 24px 50px -12px rgba(2, 132, 199, 0.12),
+                  0 4px 18px rgba(0, 0, 0, 0.03);
+      backdrop-filter: blur(12px);
+      transition: all 0.25s ease;
+    }
+
+    /* Header Crest */
+    .crest-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .crest-badge {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+      border-radius: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 8px 24px rgba(14, 165, 233, 0.38);
+      margin-bottom: 14px;
+      position: relative;
+      transition: transform 0.3s ease;
+    }
+
+    .crest-badge:hover {
+      transform: scale(1.04) rotate(2deg);
+    }
+
+    .crest-badge svg {
+      width: 36px;
+      height: 36px;
+      fill: none;
+      stroke: #ffffff;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .live-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #047857;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulseGreen 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseGreen {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .hospital-title {
+      font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.55rem;
+      font-weight: 900;
+      color: #0f172a;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+
+    .hospital-tagline {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #0284c7;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 4px;
+    }
+
+    /* Input Field Elements */
+    .field-group {
+      margin-bottom: 18px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 7px;
+    }
+
+    .input-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      color: #94a3b8;
+      font-size: 1.1rem;
+      pointer-events: none;
+      transition: color 0.2s;
+    }
+
+    .clean-input {
+      width: 100%;
+      height: 52px;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 0 46px 0 44px;
+      font-size: 1rem;
+      color: #0f172a;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+      -webkit-appearance: none;
+    }
+
+    .clean-input:focus {
+      background: #ffffff;
+      border-color: #0ea5e9;
+      box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.16);
+    }
+
+    .clean-input:focus + .input-icon,
+    .clean-input:focus ~ .input-icon {
+      color: #0284c7;
+    }
+
+    .clean-input::placeholder {
+      color: #94a3b8;
+      font-size: 0.92rem;
+    }
+
+    .password-toggle-btn {
+      position: absolute;
+      right: 10px;
+      background: none;
+      border: none;
+      padding: 8px;
+      color: #64748b;
+      cursor: pointer;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .password-toggle-btn:hover {
+      color: #0f172a;
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    /* Checkbox & Helpers */
+    .row-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+      font-size: 0.82rem;
+    }
+
+    .custom-check-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: #475569;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    .custom-check-wrap input[type="checkbox"] {
+      width: 17px;
+      height: 17px;
+      accent-color: #0ea5e9;
+      cursor: pointer;
+    }
+
+    .helper-link {
+      color: #0284c7;
+      text-decoration: none;
+      font-weight: 700;
       transition: color 0.15s;
     }
-    .password-toggle:hover {
-      color: var(--slate-700);
+
+    .helper-link:hover {
+      color: #0369a1;
+      text-decoration: underline;
     }
-    .security-notice {
-      margin-top: 32px;
-      padding: 14px 16px;
+
+    /* Primary Submit Button */
+    .btn-submit-login {
+      width: 100%;
+      height: 52px;
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+      border: none;
+      border-radius: 14px;
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 8px 22px rgba(14, 165, 233, 0.35);
+      transition: all 0.2s ease;
+    }
+
+    .btn-submit-login:hover {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      transform: translateY(-1.5px);
+      box-shadow: 0 10px 26px rgba(14, 165, 233, 0.42);
+    }
+
+    .btn-submit-login:active {
+      transform: scale(0.98);
+    }
+
+    .btn-submit-login:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Quick Shortcuts Grid */
+    .shortcuts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 22px;
+      padding-top: 20px;
+      border-top: 1px solid var(--med-border);
+    }
+
+    .shortcut-pill {
       background: #f8fafc;
-      border: 1px solid var(--slate-200);
-      border-radius: var(--radius-md);
-      font-size: 0.78rem;
-      color: var(--slate-600);
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 10px 8px;
+      text-align: center;
+      text-decoration: none;
+      color: #334155;
+      font-size: 0.76rem;
+      font-weight: 700;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.15s ease;
+    }
+
+    .shortcut-pill:hover {
+      background: #f0f9ff;
+      border-color: #bae6fd;
+      color: #0284c7;
+      transform: translateY(-1px);
+    }
+
+    .shortcut-icon {
+      font-size: 1.1rem;
+    }
+
+    /* Alerts Box */
+    .error-alert-box {
+      padding: 12px 14px;
+      border-radius: 12px;
+      margin-bottom: 18px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: shakeX 0.35s ease;
+    }
+
+    @keyframes shakeX {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-4px); }
+      40%, 80% { transform: translateX(4px); }
+    }
+
+    /* Footer Security */
+    .footer-security {
+      text-align: center;
+      margin-top: 22px;
+      font-size: 0.73rem;
+      color: #64748b;
       line-height: 1.5;
     }
 
-    @media (max-width: 960px) {
-      .login-container {
-        flex-direction: column;
-      }
-      .login-brand-side {
-        order: 2;
-        padding: 40px 24px;
-      }
-      .login-form-side {
-        order: 1;
-        padding: 40px 24px;
-        box-shadow: none;
-      }
+    .footer-security strong {
+      color: #334155;
     }
 
+    /* Mobile Responsive Optimizations */
     @media (max-width: 480px) {
-      .login-brand-side, .login-form-side {
-        padding: 28px 18px;
+      .login-card {
+        padding: 30px 20px 26px;
+        border-radius: 22px;
+      }
+      .hospital-title {
+        font-size: 1.4rem;
+      }
+      .crest-badge {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+      }
+      .crest-badge svg {
+        width: 30px;
+        height: 30px;
+      }
+      .clean-input {
+        height: 48px;
+        font-size: 16px; /* Prevents auto-zoom on iOS */
+      }
+      .btn-submit-login {
+        height: 50px;
+        font-size: 0.95rem;
       }
     }
   </style>
 </head>
 <body>
 
-<div class="login-container">
-  <!-- Left Side: Hospital Identity & System Safeguards -->
-  <div class="login-brand-side">
-    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
-      <div style="width: 52px; height: 52px; background: linear-gradient(135deg, #0ea5e9, #0284c7); border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(14, 165, 233, 0.4); flex-shrink: 0;">
-        <svg style="width: 30px; height: 30px; fill: none; stroke: #ffffff; stroke-width: 2.2;" viewBox="0 0 24 24">
-          <path d="M12 2C8.5 2 6 4.5 6 8c0 3.5 1.5 6.5 2 10 .5 3 2 4 4 4s3.5-1 4-4c.5-3.5 2-6.5 2-10 0-3.5-2.5-6-6-6z"/>
-          <path d="M10 8c.5 1 1.5 1.5 2 1.5s1.5-.5 2-1.5"/>
-        </svg>
-      </div>
-      <div>
-        <h1 style="font-size: 1.65rem; font-weight: 800; color: #ffffff; margin: 0; line-height: 1.1; letter-spacing: -0.01em;">
-          RK HOSPITAL BAWASKAR
-        </h1>
-        <div style="font-size: 0.82rem; font-weight: 700; color: #38bdf8; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 4px;">
-          Centre of Dental Surgery & Oral Health
-        </div>
-      </div>
-    </div>
+  <!-- Ambient Light Pattern -->
+  <div class="bg-mesh-pattern"></div>
+  <div class="ambient-glow"></div>
 
-    <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.6; max-width: 540px; margin: 0 0 10px;">
-      Integrated Dental Hospital Information System & Electronic Medical Record (EMR). Secure clinical management designed for oral surgery, operative dentistry, and patient care coordination.
-    </p>
+  <main class="login-wrapper">
+    <div class="login-card">
 
-    <!-- Clinical Features Highlights -->
-    <div class="feature-list">
-      <div class="feature-item">
-        <span class="feature-icon">🦷</span>
-        <div>
-          <div class="feature-title">Interactive 32-Tooth Visual Odontogram</div>
-          <div class="feature-desc">Surface-level anatomical dental charting with FDI tooth notation and clinical diagnosis.</div>
-        </div>
-      </div>
-
-      <div class="feature-item">
-        <span class="feature-icon">✍️</span>
-        <div>
-          <div class="feature-title">Paperless Touch Informed Consents</div>
-          <div class="feature-desc">Digital signatures for Implants, RCT, Extractions, and Anesthesia with legal certificate generation.</div>
-        </div>
-      </div>
-
-      <div class="feature-item">
-        <span class="feature-icon">📲</span>
-        <div>
-          <div class="feature-title">WhatsApp Clinical Communication</div>
-          <div class="feature-desc">Automated appointment alerts, reminders, and post-operative care instructions.</div>
-        </div>
-      </div>
-
-      <div class="feature-item">
-        <span class="feature-icon">🔒</span>
-        <div>
-          <div class="feature-title">Confidential Healthcare Records</div>
-          <div class="feature-desc">Role-based access control with comprehensive clinical audit logging and encrypted sessions.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Hospital Legal Notice -->
-    <div style="margin-top: 40px; font-size: 0.75rem; color: #94a3b8; line-height: 1.5; max-width: 520px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 16px;">
-      ⚠️ <b>CONFIDENTIALITY NOTICE:</b> This system contains sensitive Protected Health Information (PHI). Authorized clinical personnel only. Unauthorized access, disclosure, or misuse is strictly prohibited under applicable healthcare privacy laws.
-    </div>
-  </div>
-
-  <!-- Right Side: Standard Secure Form Login -->
-  <div class="login-form-side">
-    <div style="max-width: 380px; margin: 0 auto; width: 100%;">
-      <!-- Form Header -->
-      <div style="margin-bottom: 24px;">
-        <span class="badge badge-primary" style="font-size: 0.72rem; margin-bottom: 10px; display: inline-block;">
-          SECURE GATEWAY
+      <!-- Hospital Crest & Brand Header -->
+      <div class="crest-container">
+        <span class="live-status-pill">
+          <span class="status-dot"></span>
+          Clinical EMR Gateway
         </span>
-        <h2 style="font-size: 1.55rem; font-weight: 800; color: var(--slate-900); margin: 0 0 6px;">
-          Hospital Staff Login
-        </h2>
-        <p style="font-size: 0.85rem; color: var(--slate-500); margin: 0;">
-          Sign in with your authorized hospital credentials
-        </p>
+
+        <div class="crest-badge" title="RK Hospital Bawaskar">
+          <!-- Dental Tooth SVG Emblem -->
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2C8.5 2 6 4.5 6 8c0 3.5 1.5 6.5 2 10 .5 3 2 4 4 4s3.5-1 4-4c.5-3.5 2-6.5 2-10 0-3.5-2.5-6-6-6z"/>
+            <path d="M10 8c.5 1 1.5 1.5 2 1.5s1.5-.5 2-1.5"/>
+          </svg>
+        </div>
+
+        <h1 class="hospital-title">RK HOSPITAL BAWASKAR</h1>
+        <div class="hospital-tagline">Centre of Dental Excellence & Maxillofacial Care</div>
       </div>
 
-      <!-- Messages / Feedback -->
+      <!-- Messages Flash Container -->
       {% if messages %}
         {% for message in messages %}
-          <div style="padding: 12px 14px; border-radius: 8px; margin-bottom: 18px; font-size: 0.85rem; font-weight: 500;
-            {% if message.tags == 'error' %}background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;
-            {% else %}background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;{% endif %}">
-            {{ message }}
+          <div class="error-alert-box" style="{% if message.tags == 'success' %}background:#f0fdf4; border-color:#bbf7d0; color:#166534;{% elif message.tags != 'error' %}background:#f0f9ff; border-color:#bae6fd; color:#0369a1;{% endif %}">
+            <span>{% if message.tags == 'error' %}⚠️{% elif message.tags == 'success' %}✓{% else %}ℹ️{% endif %}</span>
+            <div style="flex:1;">{{ message }}</div>
           </div>
         {% endfor %}
       {% endif %}
 
-      <!-- Standard Confidential Form -->
-      <form method="POST" action="{% url 'login' %}">
+      <!-- Confidential Staff Login Form -->
+      <form method="POST" action="{% url 'login' %}" id="loginForm" onsubmit="handleLoginSubmit(event)">
         {% csrf_token %}
+        {% if next %}
+          <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
 
-        <div class="form-group" style="margin-bottom: 16px;">
-          <label class="form-label" for="id_username">Username or Staff ID</label>
-          <input
-            type="text"
-            id="id_username"
-            name="username"
-            class="form-input"
-            placeholder="Enter username"
-            required
-            autocomplete="username"
-            autofocus
-          >
+        <!-- Username / Staff ID -->
+        <div class="field-group">
+          <label class="field-label" for="id_username">Authorized Username or Staff ID</label>
+          <div class="input-box">
+            <input
+              type="text"
+              id="id_username"
+              name="username"
+              class="clean-input"
+              placeholder="e.g. admin or dr.sharma"
+              required
+              autocomplete="username"
+              autofocus
+            >
+            <span class="input-icon">👤</span>
+          </div>
         </div>
 
-        <div class="form-group" style="margin-bottom: 22px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label class="form-label" for="id_password" style="margin: 0;">Password</label>
-          </div>
-          <div class="password-wrap">
+        <!-- Password -->
+        <div class="field-group">
+          <label class="field-label" for="id_password">Password</label>
+          <div class="input-box">
             <input
               type="password"
               id="id_password"
               name="password"
-              class="form-input"
-              placeholder="Enter password"
+              class="clean-input"
+              placeholder="Enter your security password"
               required
               autocomplete="current-password"
             >
-            <button type="button" class="password-toggle" onclick="togglePasswordVisibility()" title="Show/Hide Password" aria-label="Toggle password visibility">
+            <span class="input-icon">🔒</span>
+            <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility()" title="Show/Hide Password" aria-label="Toggle password visibility">
               <span id="eyeIcon">👁️</span>
             </button>
           </div>
         </div>
 
-        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-weight: 700; font-size: 0.95rem; justify-content: center; box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);">
-          Sign In to Hospital Portal →
+        <!-- Row: Remember Session & IT Support -->
+        <div class="row-meta">
+          <label class="custom-check-wrap">
+            <input type="checkbox" id="rememberSession" name="remember_me" checked>
+            <span>Remember Device</span>
+          </label>
+          <a href="tel:+919822011223" class="helper-link" title="Emergency Clinical Helpline">
+            Helpline Desk ➔
+          </a>
+        </div>
+
+        <!-- Action Button -->
+        <button type="submit" id="btnLoginSubmit" class="btn-submit-login">
+          <span id="btnText">Sign In to Clinical EMR</span>
+          <span id="btnIcon" style="font-size: 1.15rem;">➔</span>
         </button>
       </form>
 
-      <!-- Security Details Box -->
-      <div class="security-notice">
-        <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--slate-700); margin-bottom: 4px;">
-          <span>🔒</span>
-          <span>Encrypted Session</span>
-        </div>
-        <div>
-          All login attempts and session activities are monitored and cryptographically verified. For account support or password resets, contact the Hospital IT Administrator.
-        </div>
+      <!-- Quick Medical Shortcuts (Mobile & Walk-in assistance) -->
+      <div class="shortcuts-grid">
+        <a href="{% url 'kiosk_self_checkin' %}" class="shortcut-pill" title="Walk-in patients can check in without reception queue">
+          <span class="shortcut-icon">📲</span>
+          <span>OPD Self Check-In</span>
+        </a>
+        <a href="tel:+919822011223" class="shortcut-pill" style="color: #ef4444;" title="Call 24/7 Dental Emergency Desk">
+          <span class="shortcut-icon">🚨</span>
+          <span>24/7 Dental Emergency</span>
+        </a>
       </div>
 
-      <!-- Footer Info -->
-      <div style="margin-top: 32px; text-align: center; font-size: 0.75rem; color: var(--slate-400);">
-        RK Hospital Bawaskar • Centre of Dental Excellence<br>
-        Nagpur Road Campus • Emergency: +91 98220 11223
-      </div>
     </div>
-  </div>
-</div>
 
-<script>
-  function togglePasswordVisibility() {
-    var passInput = document.getElementById('id_password');
-    var eyeIcon = document.getElementById('eyeIcon');
-    if (!passInput) return;
-    if (passInput.type === 'password') {
-      passInput.type = 'text';
-      if (eyeIcon) eyeIcon.textContent = '🙈';
-    } else {
-      passInput.type = 'password';
-      if (eyeIcon) eyeIcon.textContent = '👁️';
+    <!-- Security & Compliance Footer -->
+    <footer class="footer-security">
+      <div>🔒 <strong>256-Bit SSL Encrypted Healthcare Portal</strong> • PHI Protected</div>
+      <div style="margin-top: 3px;">RK Hospital Bawaskar • Nagpur Road Campus • Nagpur</div>
+    </footer>
+  </main>
+
+  <script>
+    function togglePasswordVisibility() {
+      var passInput = document.getElementById('id_password');
+      var eyeIcon = document.getElementById('eyeIcon');
+      if (!passInput) return;
+      if (passInput.type === 'password') {
+        passInput.type = 'text';
+        if (eyeIcon) eyeIcon.textContent = '🙈';
+      } else {
+        passInput.type = 'password';
+        if (eyeIcon) eyeIcon.textContent = '👁️';
+      }
     }
-  }
 
-  // Register PWA Service Worker
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/static/js/sw.js')
-        .then(function(reg) {
-          console.log('[PWA] Service Worker active');
-        })
-        .catch(function(err) {
-          console.log('[PWA] Service Worker failed:', err);
-        });
-    });
-  }
-</script>
+    function handleLoginSubmit(e) {
+      var btn = document.getElementById('btnLoginSubmit');
+      var btnText = document.getElementById('btnText');
+      var btnIcon = document.getElementById('btnIcon');
+      if (btn) {
+        btn.disabled = true;
+        btnText.textContent = 'Verifying Credentials...';
+        btnIcon.textContent = '⏳';
+      }
+    }
+
+    // Register PWA Service Worker for offline performance
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/static/js/sw.js')
+          .then(function(reg) {
+            console.log('[PWA] Service Worker registered for RK Hospital');
+          })
+          .catch(function(err) {
+            console.log('[PWA] Service Worker registration error:', err);
+          });
+      });
+    }
+  </script>
 
 </body>
 </html>

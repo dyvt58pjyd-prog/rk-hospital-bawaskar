@@ -31,6 +31,8 @@ def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
 
+    next_url = request.POST.get('next') or request.GET.get('next') or 'dashboard'
+
     if request.method == 'POST':
         u = request.POST.get('username', '').strip()
         p = request.POST.get('password', '')
@@ -38,11 +40,11 @@ def login_view(request):
         if user is not None:
             login(request, user)
             messages.success(request, f"Welcome, {user.get_full_name() or user.username}!")
-            return redirect('dashboard')
+            return redirect(next_url)
         else:
             messages.error(request, "Invalid username or password. Please verify your credentials and try again.")
 
-    return render(request, 'auth/login.html')
+    return render(request, 'auth/login.html', {'next': request.GET.get('next', '')})
 
 
 def logout_view(request):
